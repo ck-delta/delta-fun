@@ -1,0 +1,168 @@
+import { useState, useEffect } from 'react';
+import { ShoppingCart, TrendingUp, TrendingDown } from 'lucide-react';
+import { api } from '../lib/api';
+import { useTradingContext } from '../context/TradingContext';
+
+export default function OrderForm() {
+  const { lastSignal, showToast, setTrades, setTotalPnL, setStreakInfo } = useTradingContext();
+  const [side, setSide] = useState<'buy' | 'sell'>('buy');
+  const [quantity, setQuantity] = useState('0.001');
+  const [stopLoss, setStopLoss] = useState('');
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [placing, setPlacing] = useState(false);
+
+  // Auto-set side from signal
+  useEffect(() => {
+    if (lastSignal?.signal === 'buy') setSide('buy');
+    else if (lastSignal?.signal === 'sell') setSide('sell');
+  }, [lastSignal]);
+
+  // Fetch live price
+  useEffect(() => {
+    let cancelled = false;
+    const update = async () => {
+      try {
+        const p = await api.getPrice();
+        if (!cancelled) setCurrentPrice(p);
+      } catch { /* silent */ }
+    };
+    update();
+    const t = setInterval(update, 15000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, []);
+
+  const refreshTrades = async () => {
+    const data = await api.getTrades();
+    setTrades(data.trades);
+    setTotalPnL(data.totalPnL);
+    setStreakInfo(data.streak, data.streakType);
+  };
+
+  const handlePlace = async () => {
+    const qty = parseFloat(quantity);
+    if (isNaN(qty) || qty <= 0) {
+      showToast('Enter a valid quantity', 'error');
+      return;
+    }
+    setPlacing(true);
+    try {
+      const sl = stopLoss ? parseFloat(stopLoss) : undefined;
+      const res = await api.placeTrade({
+        side,
+        quantity: qty,
+        stopLoss: sl,
+        signal: lastSignal?.signal,
+      });
+      showToast(res.message, 'success');
+      await refreshTrades();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Order failed', 'error');
+    } finally {
+      setPlacing(false);
+    }
+  };
+
+  const orderValue = currentPrice && parseFloat(quantity) > 0
+    ? (currentPrice * parseFloat(quantity)).toLocaleString('en-US', { maximumFractionDigits: 2 })
+    : null;
+
+  return (
+    <div className="p-4 border-b border-[#374151]">
+      <div className="flex items-center gap-2 mb-3">
+        <ShoppingCart size={14} className="text-blue-400" />
+        <span className="text-xs font-medium text-[#9ca3af] uppercase tracking-wider">Paper Trade</span>
+        {lastSignal && (
+          <span className="ml-auto text-[10px] text-[#6b7280]">
+            Signal auto-set
+          </span>
+        )}
+      </div>
+
+      {/* Buy / Sell toggle */}
+      <div className="flex rounded-lg overflow-hidden border border-[#374151] mb-3">
+        <button
+          onClick={() => setSide('buy')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold transition-colors ${
+            side === 'buy' ? 'bg-green-600 text-white' : 'bg-[#1f2937] text-[#6b7280] hover:text-white'
+          }`}
+        >
+          <TrendingUp size={14} /> BUY
+        </button>
+        <button
+          onClick={() => setSide('sell')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold transition-colors ${
+            side === 'sell' ? 'bg-red-600 text-white' : 'bg-[#1f2937] text-[#6b7280] hover:text-white'
+          }`}
+        >
+          <TrendingDown size={14} /> SELL
+        </button>
+      </div>
+
+      {/* Fields */}
+      <div className="space-y-2 mb-3">
+        <div>
+          <label className="text-[11px] text-[#6b7280] block mb-1">Symbol</label>
+          <div className="bg-[#111827] border border-[#374151] rounded-lg px-3 py-2 text-sm text-[#9ca3af]">
+            BTC / USD (Paper)
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-[11px] text-[#6b7280] block mb-1">Quantity (BTC)</label>
+            <input
+              type="number"
+              value={quantity}
+              onChange={e => setQuantity(e.target.value)}
+              step="0.001"
+              min="0.001"
+              className="w-full bg-[#1f2937] border border-[#374151] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-[#6b7280] block mb-1">Stop Loss (USD)</label>
+            <input
+              type="number"
+              value={stopLoss}
+              onChange={e => setStopLoss(e.target.value)}
+              placeholder="Optional"
+              className="w-full bg-[#1f2937] border border-[#374151] rounded-lg px-3 py-2 text-sm text-white placeholder-[#6b7280] focus:outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-between text-[11px] text-[#6b7280]">
+          <span>Market price</span>
+          <span className="text-white font-mono">
+            {currentPrice ? `$${currentPrice.toLocaleString()}` : 'Loading...'}
+          </span>
+        </div>
+        {orderValue && (
+          <div className="flex justify-between text-[11px] text-[#6b7280]">
+            <span>Order value</span>
+            <span className="text-white font-mono">≈ ${orderValue}</span>
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={handlePlace}
+        disabled={placing}
+        className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all ${
+          side === 'buy'
+            ? 'bg-green-600 hover:bg-green-500 text-white'
+            : 'bg-red-600 hover:bg-red-500 text-white'
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
+      >
+        {placing ? (
+          <span className="flex items-center justify-center gap-2">
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Placing...
+          </span>
+        ) : (
+          `Place Paper ${side.toUpperCase()}`
+        )}
+      </button>
+    </div>
+  );
+}

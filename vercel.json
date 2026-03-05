@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "buildCommand": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "npm install",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/index" }
+  ],
+  "functions": {
+    "api/index.ts": {
+      "runtime": "@vercel/node@5",
+      "maxDuration": 30,
+      "memory": 512
+    }
+  },
+  "env": {
+    "GROQ_API_KEY": "@groq-api-key"
+  }
+}
