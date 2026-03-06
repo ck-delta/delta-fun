@@ -13,8 +13,12 @@ interface TradingContextValue {
   setStreakInfo: (streak: number, type: 'win' | 'loss' | 'none') => void;
   isAnalyzing: boolean;
   setIsAnalyzing: (v: boolean) => void;
-  overshootResult: string | undefined;
-  setOvershootResult: (v: string | undefined) => void;
+  // Updated once when stream first activates — NOT per stream tick
+  overshootStatus: 'idle' | 'active' | 'error';
+  setOvershootStatus: (s: 'idle' | 'active' | 'error') => void;
+  // Snapshot captured at submit time, not per stream tick
+  lastOvershootSnapshot: string | undefined;
+  setLastOvershootSnapshot: (v: string | undefined) => void;
   toast: { message: string; type: 'success' | 'error' } | null;
   showToast: (message: string, type?: 'success' | 'error') => void;
 }
@@ -28,7 +32,8 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const [streak, setStreak] = useState(0);
   const [streakType, setStreakType] = useState<'win' | 'loss' | 'none'>('none');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [overshootResult, setOvershootResult] = useState<string | undefined>(undefined);
+  const [overshootStatus, setOvershootStatus] = useState<'idle' | 'active' | 'error'>('idle');
+  const [lastOvershootSnapshot, setLastOvershootSnapshot] = useState<string | undefined>(undefined);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const setStreakInfo = useCallback((s: number, t: 'win' | 'loss' | 'none') => {
@@ -48,7 +53,8 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       totalPnL, setTotalPnL,
       streak, streakType, setStreakInfo,
       isAnalyzing, setIsAnalyzing,
-      overshootResult, setOvershootResult,
+      overshootStatus, setOvershootStatus,
+      lastOvershootSnapshot, setLastOvershootSnapshot,
       toast, showToast,
     }}>
       {children}

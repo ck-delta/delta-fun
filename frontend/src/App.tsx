@@ -20,6 +20,21 @@ function Toast() {
   );
 }
 
+function OvershootStatusDot() {
+  const { overshootStatus } = useTradingContext();
+  if (overshootStatus === 'idle') return null;
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className={`w-1.5 h-1.5 rounded-full ${
+        overshootStatus === 'active' ? 'bg-purple-400 animate-pulse' : 'bg-red-500'
+      }`} />
+      <span className={overshootStatus === 'active' ? 'text-purple-400' : 'text-red-400'}>
+        Vision {overshootStatus === 'active' ? 'on' : 'err'}
+      </span>
+    </span>
+  );
+}
+
 function AppInner() {
   useOvershoot();
   return (
@@ -32,6 +47,7 @@ function AppInner() {
           <span className="text-[#6b7280] text-xs">BTC/USD · Paper Trading</span>
         </div>
         <div className="flex items-center gap-3 text-xs text-[#6b7280]">
+          <OvershootStatusDot />
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
             Live

@@ -25,7 +25,7 @@ function ConfidenceBar({ value }: { value: number }) {
 }
 
 export default function SignalDisplay() {
-  const { lastSignal, isAnalyzing, overshootResult } = useTradingContext();
+  const { lastSignal, isAnalyzing, lastOvershootSnapshot } = useTradingContext();
   const [showOvershoot, setShowOvershoot] = useState(false);
 
   if (isAnalyzing) {
@@ -126,8 +126,8 @@ export default function SignalDisplay() {
           <p className="text-[#9ca3af] text-[11px] italic">{lastSignal.keyLevels}</p>
         )}
 
-        {/* Overshoot visual notes */}
-        {overshootResult && (
+        {/* Overshoot visual notes — from snapshot taken at submit time */}
+        {lastOvershootSnapshot && (
           <div className="mt-3 border-t border-[#374151] pt-3">
             <button
               onClick={() => setShowOvershoot(v => !v)}
@@ -138,7 +138,7 @@ export default function SignalDisplay() {
               {showOvershoot ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             </button>
             {showOvershoot && (
-              <p className="mt-2 text-[11px] text-[#9ca3af] leading-relaxed">{overshootResult}</p>
+              <p className="mt-2 text-[11px] text-[#9ca3af] leading-relaxed">{lastOvershootSnapshot}</p>
             )}
           </div>
         )}
