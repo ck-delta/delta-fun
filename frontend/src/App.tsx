@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { TradingProvider, useTradingContext } from './context/TradingContext';
 import ChartPanel from './components/ChartPanel';
 import PromptInput from './components/PromptInput';
@@ -36,7 +37,12 @@ function OvershootStatusDot() {
 }
 
 function AppInner() {
-  useOvershoot();
+  const { setStartVision } = useTradingContext();
+  const { startVision } = useOvershoot();
+
+  // Register startVision into context once — stable callback, runs once
+  useEffect(() => { setStartVision(startVision); }, [startVision, setStartVision]);
+
   return (
     <div className="h-screen w-screen bg-[#111827] flex flex-col overflow-hidden">
       {/* Top bar */}

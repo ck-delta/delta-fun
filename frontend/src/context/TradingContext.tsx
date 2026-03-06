@@ -13,10 +13,11 @@ interface TradingContextValue {
   setStreakInfo: (streak: number, type: 'win' | 'loss' | 'none') => void;
   isAnalyzing: boolean;
   setIsAnalyzing: (v: boolean) => void;
-  // Updated once when stream first activates — NOT per stream tick
   overshootStatus: 'idle' | 'active' | 'error';
   setOvershootStatus: (s: 'idle' | 'active' | 'error') => void;
-  // Snapshot captured at submit time, not per stream tick
+  // Called by the "Enable Chart Vision" button — triggers screenshare dialog
+  startVision: () => void;
+  setStartVision: (fn: () => void) => void;
   lastOvershootSnapshot: string | undefined;
   setLastOvershootSnapshot: (v: string | undefined) => void;
   toast: { message: string; type: 'success' | 'error' } | null;
@@ -33,6 +34,8 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const [streakType, setStreakType] = useState<'win' | 'loss' | 'none'>('none');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [overshootStatus, setOvershootStatus] = useState<'idle' | 'active' | 'error'>('idle');
+  const [startVision, setStartVisionFn] = useState<() => void>(() => () => {});
+  const setStartVision = useCallback((fn: () => void) => setStartVisionFn(() => fn), []);
   const [lastOvershootSnapshot, setLastOvershootSnapshot] = useState<string | undefined>(undefined);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -54,6 +57,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       streak, streakType, setStreakInfo,
       isAnalyzing, setIsAnalyzing,
       overshootStatus, setOvershootStatus,
+      startVision, setStartVision,
       lastOvershootSnapshot, setLastOvershootSnapshot,
       toast, showToast,
     }}>

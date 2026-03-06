@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Eye, EyeOff, Monitor } from 'lucide-react';
+import { useTradingContext } from '../context/TradingContext';
 
 const CHART_URL =
   'https://www.geckoterminal.com/eth/pools/0x9db9e0e53058c89e5b94e29621a205198648425b?embed=1&info=0&swaps=0&light_chart=0&chart_type=price&resolution=15m&bg_color=111827';
@@ -7,6 +8,7 @@ const CHART_URL =
 export default function ChartPanel() {
   const [key, setKey] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const { overshootStatus, startVision } = useTradingContext();
 
   return (
     <div className="relative h-full flex flex-col bg-[#111827]">
@@ -49,6 +51,46 @@ export default function ChartPanel() {
           className="w-full h-full"
           style={{ border: 'none' }}
         />
+
+        {/* Vision banner — shown when idle or errored */}
+        {loaded && overshootStatus !== 'active' && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 animate-fade-in">
+            <button
+              onClick={startVision}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-medium shadow-xl backdrop-blur-sm transition-all border ${
+                overshootStatus === 'error'
+                  ? 'bg-red-950/80 border-red-700/50 text-red-300 hover:bg-red-900/90'
+                  : 'bg-[#1e2636]/90 border-purple-500/30 text-purple-300 hover:bg-purple-900/40 hover:border-purple-500/60'
+              }`}
+            >
+              {overshootStatus === 'error' ? (
+                <>
+                  <EyeOff size={15} />
+                  Vision failed — retry
+                </>
+              ) : (
+                <>
+                  <Monitor size={15} />
+                  Enable Chart Vision
+                  <span className="text-[10px] text-purple-400/70 ml-1">(select This Tab)</span>
+                </>
+              )}
+            </button>
+            {overshootStatus === 'idle' && (
+              <p className="text-center text-[10px] text-[#6b7280] mt-1.5">
+                AI will visually analyze this BTC chart
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Vision active indicator */}
+        {overshootStatus === 'active' && (
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-purple-950/70 border border-purple-700/40 backdrop-blur-sm">
+            <Eye size={11} className="text-purple-400 animate-pulse" />
+            <span className="text-[10px] text-purple-400 font-medium">Vision ON</span>
+          </div>
+        )}
       </div>
 
       {/* Disclaimer */}
