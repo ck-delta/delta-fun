@@ -1,8 +1,6 @@
-import Groq from 'groq-sdk';
 import type { TASummary } from './ta';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'] as const;
 
 export interface AnalysisResult {
@@ -12,6 +10,15 @@ export interface AnalysisResult {
   rationale: string;
   keyLevels?: string;
   modelUsed?: string;
+}
+
+interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+interface GroqResponse {
+  choices: { message: { content: string } }[];
 }
 
 function buildSystemPrompt(): string {
@@ -49,27 +56,40 @@ ${overshootResult ? `\nVISUAL CHART ANALYSIS (Overshoot.ai): ${overshootResult}`
 USER QUESTION: ${userPrompt}`;
 }
 
-async function callGroqWithRetry(
-  model: string,
-  messages: Groq.Chat.ChatCompletionMessageParam[]
-): Promise<Groq.Chat.ChatCompletion> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const params: any = {
-    model,
-    messages,
-    temperature: 0.3,
-    max_tokens: 300,
-    response_format: { type: 'json_object' },
-  };
+async function callGroqFetch(model: string, messages: ChatMessage[]): Promise<GroqResponse> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('GROQ_API_KEY not set');
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+
+  let res: Response;
   try {
-    return await groq.chat.completions.create(params);
-  } catch (err) {
-    if (err instanceof Groq.APIConnectionError) {
-      await new Promise(r => setTimeout(r, 1500));
-      return await groq.chat.completions.create(params);
-    }
-    throw err;
+    res = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature: 0.3,
+        max_tokens: 300,
+        response_format: { type: 'json_object' },
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
   }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Groq HTTP ${res.status}: ${body.slice(0, 120)}`);
+  }
+
+  return res.json() as Promise<GroqResponse>;
 }
 
 export async function analyzeWithGroq(
@@ -77,18 +97,18 @@ export async function analyzeWithGroq(
   userPrompt: string,
   overshootResult?: string
 ): Promise<AnalysisResult> {
-  const messages: Groq.Chat.ChatCompletionMessageParam[] = [
+  const messages: ChatMessage[] = [
     { role: 'system', content: buildSystemPrompt() },
     { role: 'user', content: buildUserMessage(ta, userPrompt, overshootResult) },
   ];
 
-  let completion: Groq.Chat.ChatCompletion | null = null;
+  let completion: GroqResponse | null = null;
   let modelUsed: string = MODELS[0];
   let lastError: unknown;
 
   for (const model of MODELS) {
     try {
-      completion = await callGroqWithRetry(model, messages);
+      completion = await callGroqFetch(model, messages);
       modelUsed = model;
       break;
     } catch (err) {
