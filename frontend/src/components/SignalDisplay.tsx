@@ -51,12 +51,10 @@ export default function SignalDisplay() {
 
   if (!lastSignal) {
     return (
-      <div className="p-4 border-b border-[#374151]">
-        <div className="bg-[#1e2636] rounded-xl p-6 border border-dashed border-[#374151] flex flex-col items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-[#374151] flex items-center justify-center">
-            <TrendingUp size={18} className="text-[#6b7280]" />
-          </div>
-          <p className="text-[#6b7280] text-sm text-center">Enter a prompt above to get AI-powered BTC analysis</p>
+      <div className="px-4 py-2.5 border-b border-[#374151]">
+        <div className="flex items-center gap-2.5 px-3 py-2 bg-[#1e2636] rounded-lg border border-dashed border-[#374151]">
+          <TrendingUp size={14} className="text-[#6b7280] flex-shrink-0" />
+          <p className="text-[#6b7280] text-xs">Enter a prompt above to get AI-powered BTC analysis</p>
         </div>
       </div>
     );

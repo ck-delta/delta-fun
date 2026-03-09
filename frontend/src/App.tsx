@@ -70,7 +70,7 @@ function AppInner() {
         </div>
 
         {/* Right: Controls — hidden in focus mode */}
-        <div className={`h-full flex flex-col min-h-0 overflow-y-auto transition-all duration-300 ${chartFocusMode ? 'w-0 overflow-hidden' : 'w-[40%]'}`}>
+        <div className={`h-full flex flex-col min-h-0 overflow-hidden transition-all duration-300 ${chartFocusMode ? 'w-0 overflow-hidden' : 'w-[40%]'}`}>
           <PromptInput />
           <SignalDisplay />
           <OrderForm />

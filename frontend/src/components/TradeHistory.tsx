@@ -59,7 +59,7 @@ export default function TradeHistory() {
   const label = streakLabel(streak, streakType);
 
   return (
-    <div className="p-4 flex flex-col gap-3 min-h-0 flex-1 overflow-hidden">
+    <div className="p-4 flex flex-col gap-3 min-h-[180px] flex-1 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

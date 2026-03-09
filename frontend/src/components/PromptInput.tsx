@@ -34,13 +34,13 @@ export default function PromptInput() {
         <span className="text-xs font-medium text-[#9ca3af] uppercase tracking-wider">AI Analysis</span>
       </div>
 
-      {/* Example prompts */}
-      <div className="flex flex-wrap gap-1.5 mb-3">
+      {/* Example prompts — single scrollable row */}
+      <div className="flex overflow-x-auto gap-1.5 mb-3 pb-0.5 flex-nowrap scrollbar-none">
         {EXAMPLE_PROMPTS.map((p) => (
           <button
             key={p}
             onClick={() => setPrompt(p)}
-            className="text-[10px] px-2 py-1 rounded bg-[#1f2937] text-[#9ca3af] hover:bg-[#374151] hover:text-white transition-colors border border-[#374151] leading-tight"
+            className="text-[10px] px-2 py-1 rounded bg-[#1f2937] text-[#9ca3af] hover:bg-[#374151] hover:text-white transition-colors border border-[#374151] leading-tight flex-shrink-0"
           >
             {p.length > 35 ? p.slice(0, 35) + '…' : p}
           </button>
@@ -53,7 +53,7 @@ export default function PromptInput() {
           onChange={e => setPrompt(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask about BTC/USD... (⌘+Enter to submit)"
-          rows={3}
+          rows={2}
           className="w-full bg-[#1f2937] border border-[#374151] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#6b7280] resize-none focus:outline-none focus:border-purple-500 transition-colors pr-10"
         />
         <button
