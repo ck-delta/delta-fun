@@ -75,8 +75,10 @@ export async function analyzeWithGroq(
   return {
     prediction: parsed.prediction === 'up' ? 'up' : 'down',
     confidence: Math.max(0, Math.min(1, Number(parsed.confidence) || 0.5)),
-    signal: ['buy', 'sell', 'hold'].includes(parsed.signal) ? parsed.signal : 'hold',
-    rationale: parsed.rationale || 'Analysis inconclusive.',
+    signal: (['buy', 'sell', 'hold'] as const).includes(parsed.signal as 'buy' | 'sell' | 'hold')
+      ? (parsed.signal as 'buy' | 'sell' | 'hold')
+      : 'hold',
+    rationale: parsed.rationale ?? 'Analysis inconclusive.',
     keyLevels: parsed.keyLevels,
   };
 }
