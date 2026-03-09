@@ -53,12 +53,14 @@ export const api = {
 
   async getPrice(): Promise<number> {
     const res = await fetch(`${API_URL}/api/market/price`);
+    if (!res.ok) throw new Error(`Price fetch failed: HTTP ${res.status}`);
     const data = await res.json() as { price: number };
     return data.price;
   },
 
   async getTrades(): Promise<TradesResponse> {
     const res = await fetch(`${API_URL}/api/trades`);
+    if (!res.ok) throw new Error(`Trades fetch failed: HTTP ${res.status}`);
     return res.json();
   },
 

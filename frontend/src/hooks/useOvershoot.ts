@@ -15,7 +15,24 @@ export function useOvershoot() {
 
     setOvershootStatus('idle'); // reset in case of retry
 
+    // Patch getDisplayMedia to pre-select current tab (Chrome 89+)
+    let originalGetDisplayMedia: typeof navigator.mediaDevices.getDisplayMedia | null = null;
+    const restoreGetDisplayMedia = () => {
+      if (originalGetDisplayMedia) {
+        navigator.mediaDevices.getDisplayMedia = originalGetDisplayMedia;
+        originalGetDisplayMedia = null;
+      }
+    };
+
     try {
+      originalGetDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
+      navigator.mediaDevices.getDisplayMedia = (constraints?: DisplayMediaStreamOptions) =>
+        originalGetDisplayMedia!({
+          ...constraints,
+          preferCurrentTab: true,
+          selfBrowserSurface: 'include',
+        } as DisplayMediaStreamOptions & { preferCurrentTab?: boolean; selfBrowserSurface?: string });
+
       const { RealtimeVision } = await import('overshoot');
 
       const vision = new RealtimeVision({
@@ -29,6 +46,7 @@ export function useOvershoot() {
 4. Whether price appears extended or range-bound
 Respond in 2-3 sentences focusing on actionable insights.`,
         onResult: (result: { result?: string; success?: boolean }) => {
+          restoreGetDisplayMedia();
           if (result.success && result.result) {
             overshootStore.latestResult = result.result;
             if (!firstResultRef.current) {
@@ -38,6 +56,7 @@ Respond in 2-3 sentences focusing on actionable insights.`,
           }
         },
         onError: () => {
+          restoreGetDisplayMedia();
           setOvershootStatus('error');
           activeRef.current = false;
         },
@@ -47,6 +66,7 @@ Respond in 2-3 sentences focusing on actionable insights.`,
       activeRef.current = true;
       await (vision as { start: () => Promise<void> }).start();
     } catch (err) {
+      restoreGetDisplayMedia();
       console.warn('[Overshoot] Failed to start:', err);
       setOvershootStatus('error');
       activeRef.current = false;

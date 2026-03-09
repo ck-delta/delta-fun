@@ -9,6 +9,7 @@ export default function OrderForm() {
   const [quantity, setQuantity] = useState('0.001');
   const [stopLoss, setStopLoss] = useState('');
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [priceError, setPriceError] = useState(false);
   const [placing, setPlacing] = useState(false);
 
   // Auto-set side from signal
@@ -23,8 +24,8 @@ export default function OrderForm() {
     const update = async () => {
       try {
         const p = await api.getPrice();
-        if (!cancelled) setCurrentPrice(p);
-      } catch { /* silent */ }
+        if (!cancelled) { setCurrentPrice(p); setPriceError(false); }
+      } catch { if (!cancelled) setPriceError(true); }
     };
     update();
     const t = setInterval(update, 15000);
@@ -133,8 +134,8 @@ export default function OrderForm() {
 
         <div className="flex justify-between text-[11px] text-[#6b7280]">
           <span>Market price</span>
-          <span className="text-white font-mono">
-            {currentPrice ? `$${currentPrice.toLocaleString()}` : 'Loading...'}
+          <span className={`font-mono ${priceError ? 'text-red-400' : 'text-white'}`}>
+            {priceError ? 'Unavailable' : currentPrice ? `$${currentPrice.toLocaleString()}` : 'Loading...'}
           </span>
         </div>
         {orderValue && (

@@ -1,14 +1,33 @@
 import { useState } from 'react';
-import { RefreshCw, Eye, EyeOff, Monitor } from 'lucide-react';
+import { RefreshCw, Eye, EyeOff, Monitor, Maximize2, Minimize2 } from 'lucide-react';
 import { useTradingContext } from '../context/TradingContext';
 
-const CHART_URL =
+const GECKO_URL =
   'https://www.geckoterminal.com/eth/pools/0x9db9e0e53058c89e5b94e29621a205198648425b?embed=1&info=0&swaps=0&light_chart=0&chart_type=price&resolution=15m&bg_color=111827';
+
+const TRADINGVIEW_URL =
+  'https://s.tradingview.com/widgetembed/?symbol=BINANCE%3ABTCUSDT&interval=15&theme=dark&style=1&timezone=Asia%2FCalcutta&hide_side_toolbar=0&allow_symbol_change=0&save_image=0&hidevolume=0';
+
+type ChartSource = 'gecko' | 'tradingview';
 
 export default function ChartPanel() {
   const [key, setKey] = useState(0);
   const [loaded, setLoaded] = useState(false);
-  const { overshootStatus, startVision } = useTradingContext();
+  const [chartSource, setChartSource] = useState<ChartSource>('gecko');
+  const { overshootStatus, startVision, chartFocusMode, setChartFocusMode } = useTradingContext();
+
+  const chartUrl = chartSource === 'gecko' ? GECKO_URL : TRADINGVIEW_URL;
+  const chartLabel = chartSource === 'gecko'
+    ? 'WBTC·USDT · Ethereum · 15m'
+    : 'BTCUSDT · Binance · 15m';
+  const chartSourceLabel = chartSource === 'gecko' ? 'GeckoTerminal' : 'TradingView';
+
+  const switchSource = (src: ChartSource) => {
+    if (src === chartSource) return;
+    setChartSource(src);
+    setLoaded(false);
+    setKey(k => k + 1);
+  };
 
   return (
     <div className="relative h-full flex flex-col bg-[#111827]">
@@ -17,10 +36,38 @@ export default function ChartPanel() {
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
           <span className="text-white font-semibold text-sm tracking-wide">BTC / USD</span>
-          <span className="text-[#6b7280] text-xs">WBTC·USDT · Ethereum · 15m</span>
+          <span className="text-[#6b7280] text-xs">{chartLabel}</span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-[#6b7280] text-xs">via GeckoTerminal</span>
+        <div className="flex items-center gap-2">
+          {/* Chart source toggle */}
+          <div className="flex rounded-lg overflow-hidden border border-[#374151] text-[11px]">
+            <button
+              onClick={() => switchSource('gecko')}
+              className={`px-2.5 py-1 transition-colors ${chartSource === 'gecko' ? 'bg-orange-500/20 text-orange-300' : 'text-[#6b7280] hover:text-white'}`}
+            >
+              Gecko
+            </button>
+            <button
+              onClick={() => switchSource('tradingview')}
+              className={`px-2.5 py-1 transition-colors ${chartSource === 'tradingview' ? 'bg-blue-500/20 text-blue-300' : 'text-[#6b7280] hover:text-white'}`}
+            >
+              TradingView
+            </button>
+          </div>
+
+          <span className="text-[#6b7280] text-xs">via {chartSourceLabel}</span>
+
+          {/* Focus mode toggle — only when vision is active */}
+          {overshootStatus === 'active' && (
+            <button
+              onClick={() => setChartFocusMode(!chartFocusMode)}
+              className="text-[#6b7280] hover:text-purple-300 transition-colors p-1 rounded"
+              title={chartFocusMode ? 'Exit focus mode' : 'Expand chart for vision'}
+            >
+              {chartFocusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            </button>
+          )}
+
           <button
             onClick={() => { setLoaded(false); setKey(k => k + 1); }}
             className="text-[#6b7280] hover:text-white transition-colors p-1 rounded"
@@ -43,8 +90,8 @@ export default function ChartPanel() {
         )}
         <iframe
           key={key}
-          src={CHART_URL}
-          title="BTC/USD GeckoTerminal Chart"
+          src={chartUrl}
+          title={`BTC/USD ${chartSourceLabel} Chart`}
           frameBorder="0"
           allowFullScreen
           onLoad={() => setLoaded(true)}

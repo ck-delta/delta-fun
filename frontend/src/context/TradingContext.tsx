@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import type { AnalysisResponse, Trade } from '../lib/api';
 
 interface TradingContextValue {
@@ -22,6 +22,8 @@ interface TradingContextValue {
   setLastOvershootSnapshot: (v: string | undefined) => void;
   toast: { message: string; type: 'success' | 'error' } | null;
   showToast: (message: string, type?: 'success' | 'error') => void;
+  chartFocusMode: boolean;
+  setChartFocusMode: (v: boolean) => void;
 }
 
 const TradingContext = createContext<TradingContextValue | null>(null);
@@ -38,6 +40,8 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const setStartVision = useCallback((fn: () => void) => setStartVisionFn(() => fn), []);
   const [lastOvershootSnapshot, setLastOvershootSnapshot] = useState<string | undefined>(undefined);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [chartFocusMode, setChartFocusMode] = useState(false);
 
   const setStreakInfo = useCallback((s: number, t: 'win' | 'loss' | 'none') => {
     setStreak(s);
@@ -45,8 +49,9 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
+    toastTimerRef.current = setTimeout(() => setToast(null), 3500);
   }, []);
 
   return (
@@ -60,6 +65,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       startVision, setStartVision,
       lastOvershootSnapshot, setLastOvershootSnapshot,
       toast, showToast,
+      chartFocusMode, setChartFocusMode,
     }}>
       {children}
     </TradingContext.Provider>

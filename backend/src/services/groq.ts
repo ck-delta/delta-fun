@@ -64,7 +64,12 @@ export async function analyzeWithGroq(
   });
 
   const content = completion.choices[0]?.message?.content ?? '{}';
-  const parsed = JSON.parse(content) as AnalysisResult;
+  let parsed: Partial<AnalysisResult>;
+  try {
+    parsed = JSON.parse(content) as Partial<AnalysisResult>;
+  } catch {
+    throw new Error(`Groq returned non-JSON response: ${content.slice(0, 120)}`);
+  }
 
   // Normalize
   return {

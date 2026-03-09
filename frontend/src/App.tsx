@@ -37,7 +37,7 @@ function OvershootStatusDot() {
 }
 
 function AppInner() {
-  const { setStartVision } = useTradingContext();
+  const { setStartVision, chartFocusMode } = useTradingContext();
   const { startVision } = useOvershoot();
 
   // Register startVision into context once — stable callback, runs once
@@ -62,15 +62,15 @@ function AppInner() {
         </div>
       </div>
 
-      {/* Main layout: 60/40 split */}
+      {/* Main layout: 60/40 split (or full chart in focus mode) */}
       <div className="flex flex-1 min-h-0">
-        {/* Left: Chart (60%) */}
-        <div className="w-[60%] h-full border-r border-[#374151]">
+        {/* Left: Chart */}
+        <div className={`h-full border-r border-[#374151] transition-all duration-300 ${chartFocusMode ? 'w-full' : 'w-[60%]'}`}>
           <ChartPanel />
         </div>
 
-        {/* Right: Controls (40%) */}
-        <div className="w-[40%] h-full flex flex-col min-h-0 overflow-y-auto">
+        {/* Right: Controls — hidden in focus mode */}
+        <div className={`h-full flex flex-col min-h-0 overflow-y-auto transition-all duration-300 ${chartFocusMode ? 'w-0 overflow-hidden' : 'w-[40%]'}`}>
           <PromptInput />
           <SignalDisplay />
           <OrderForm />
