@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { ShoppingCart, TrendingUp, TrendingDown } from 'lucide-react';
 import { api } from '../lib/api';
+import { addTrade } from '../lib/tradesStore';
 import { useTradingContext } from '../context/TradingContext';
 
 export default function OrderForm() {
-  const { lastSignal, showToast, setTrades, setTotalPnL, setStreakInfo } = useTradingContext();
+  const { lastSignal, showToast, bumpTradesVersion } = useTradingContext();
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [quantity, setQuantity] = useState('0.001');
   const [stopLoss, setStopLoss] = useState('');
@@ -18,7 +19,7 @@ export default function OrderForm() {
     else if (lastSignal?.signal === 'sell') setSide('sell');
   }, [lastSignal]);
 
-  // Fetch live price
+  // Fetch live price — 30s interval to avoid CoinGecko rate limits
   useEffect(() => {
     let cancelled = false;
     const update = async () => {
@@ -28,16 +29,9 @@ export default function OrderForm() {
       } catch { if (!cancelled) setPriceError(true); }
     };
     update();
-    const t = setInterval(update, 15000);
+    const t = setInterval(update, 30000);
     return () => { cancelled = true; clearInterval(t); };
   }, []);
-
-  const refreshTrades = async () => {
-    const data = await api.getTrades();
-    setTrades(data.trades);
-    setTotalPnL(data.totalPnL);
-    setStreakInfo(data.streak, data.streakType);
-  };
 
   const handlePlace = async () => {
     const qty = parseFloat(quantity);
@@ -47,15 +41,22 @@ export default function OrderForm() {
     }
     setPlacing(true);
     try {
-      const sl = stopLoss ? parseFloat(stopLoss) : undefined;
-      const res = await api.placeTrade({
+      const entryPrice = await api.getPrice();
+      setCurrentPrice(entryPrice);
+      setPriceError(false);
+
+      addTrade({
+        id: `T${Date.now()}`,
         side,
         quantity: qty,
-        stopLoss: sl,
+        entryPrice,
+        stopLoss: stopLoss ? parseFloat(stopLoss) : undefined,
+        timestamp: Date.now(),
         signal: lastSignal?.signal,
       });
-      showToast(res.message, 'success');
-      await refreshTrades();
+      bumpTradesVersion();
+      showToast(`Paper ${side.toUpperCase()} placed at $${entryPrice.toLocaleString()}`, 'success');
+      setStopLoss('');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Order failed', 'error');
     } finally {
@@ -73,9 +74,7 @@ export default function OrderForm() {
         <ShoppingCart size={14} className="text-blue-400" />
         <span className="text-xs font-medium text-[#9ca3af] uppercase tracking-wider">Paper Trade</span>
         {lastSignal && (
-          <span className="ml-auto text-[10px] text-[#6b7280]">
-            Signal auto-set
-          </span>
+          <span className="ml-auto text-[10px] text-[#6b7280]">Signal auto-set</span>
         )}
       </div>
 

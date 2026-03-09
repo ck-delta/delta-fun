@@ -3,12 +3,15 @@ import type { TASummary } from './ta';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+const MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'] as const;
+
 export interface AnalysisResult {
   prediction: 'up' | 'down';
   confidence: number;
   signal: 'buy' | 'sell' | 'hold';
   rationale: string;
   keyLevels?: string;
+  modelUsed?: string;
 }
 
 function buildSystemPrompt(): string {
@@ -31,7 +34,7 @@ Rules:
 }
 
 function buildUserMessage(ta: TASummary, userPrompt: string, overshootResult?: string): string {
-  const taContext = `
+  return `
 REAL-TIME BTC/USD TECHNICAL INDICATORS:
 - Price: $${ta.currentPrice.toLocaleString()}
 - EMA9: $${ta.ema9.toLocaleString()} (slope: ${ta.ema9Slope}) — price is ${ta.priceVsEma9} EMA9
@@ -44,7 +47,29 @@ REAL-TIME BTC/USD TECHNICAL INDICATORS:
 ${overshootResult ? `\nVISUAL CHART ANALYSIS (Overshoot.ai): ${overshootResult}` : ''}
 
 USER QUESTION: ${userPrompt}`;
-  return taContext;
+}
+
+async function callGroqWithRetry(
+  model: string,
+  messages: Groq.Chat.ChatCompletionMessageParam[]
+): Promise<Groq.Chat.ChatCompletion> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const params: any = {
+    model,
+    messages,
+    temperature: 0.3,
+    max_tokens: 300,
+    response_format: { type: 'json_object' },
+  };
+  try {
+    return await groq.chat.completions.create(params);
+  } catch (err) {
+    if (err instanceof Groq.APIConnectionError) {
+      await new Promise(r => setTimeout(r, 1500));
+      return await groq.chat.completions.create(params);
+    }
+    throw err;
+  }
 }
 
 export async function analyzeWithGroq(
@@ -52,16 +77,30 @@ export async function analyzeWithGroq(
   userPrompt: string,
   overshootResult?: string
 ): Promise<AnalysisResult> {
-  const completion = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
-    messages: [
-      { role: 'system', content: buildSystemPrompt() },
-      { role: 'user', content: buildUserMessage(ta, userPrompt, overshootResult) },
-    ],
-    temperature: 0.3,
-    max_tokens: 300,
-    response_format: { type: 'json_object' },
-  });
+  const messages: Groq.Chat.ChatCompletionMessageParam[] = [
+    { role: 'system', content: buildSystemPrompt() },
+    { role: 'user', content: buildUserMessage(ta, userPrompt, overshootResult) },
+  ];
+
+  let completion: Groq.Chat.ChatCompletion | null = null;
+  let modelUsed: string = MODELS[0];
+  let lastError: unknown;
+
+  for (const model of MODELS) {
+    try {
+      completion = await callGroqWithRetry(model, messages);
+      modelUsed = model;
+      break;
+    } catch (err) {
+      lastError = err;
+      console.warn(`[groq] ${model} failed:`, err instanceof Error ? err.message : err);
+      // continue to next model
+    }
+  }
+
+  if (!completion) {
+    throw lastError ?? new Error('Groq analysis failed on all models');
+  }
 
   const content = completion.choices[0]?.message?.content ?? '{}';
   let parsed: Partial<AnalysisResult>;
@@ -71,7 +110,6 @@ export async function analyzeWithGroq(
     throw new Error(`Groq returned non-JSON response: ${content.slice(0, 120)}`);
   }
 
-  // Normalize
   return {
     prediction: parsed.prediction === 'up' ? 'up' : 'down',
     confidence: Math.max(0, Math.min(1, Number(parsed.confidence) || 0.5)),
@@ -80,5 +118,6 @@ export async function analyzeWithGroq(
       : 'hold',
     rationale: parsed.rationale ?? 'Analysis inconclusive.',
     keyLevels: parsed.keyLevels,
+    modelUsed,
   };
 }

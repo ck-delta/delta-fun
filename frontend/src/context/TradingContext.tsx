@@ -1,21 +1,16 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
-import type { AnalysisResponse, Trade } from '../lib/api';
+import type { AnalysisResponse } from '../lib/api';
 
 interface TradingContextValue {
   lastSignal: AnalysisResponse | null;
   setLastSignal: (s: AnalysisResponse | null) => void;
-  trades: Trade[];
-  setTrades: (t: Trade[]) => void;
-  totalPnL: number;
-  setTotalPnL: (v: number) => void;
-  streak: number;
-  streakType: 'win' | 'loss' | 'none';
-  setStreakInfo: (streak: number, type: 'win' | 'loss' | 'none') => void;
+  // tradesVersion increments whenever localStorage trades change — triggers re-renders in consumers
+  tradesVersion: number;
+  bumpTradesVersion: () => void;
   isAnalyzing: boolean;
   setIsAnalyzing: (v: boolean) => void;
   overshootStatus: 'idle' | 'active' | 'error';
   setOvershootStatus: (s: 'idle' | 'active' | 'error') => void;
-  // Called by the "Enable Chart Vision" button — triggers screenshare dialog
   startVision: () => void;
   setStartVision: (fn: () => void) => void;
   lastOvershootSnapshot: string | undefined;
@@ -30,10 +25,8 @@ const TradingContext = createContext<TradingContextValue | null>(null);
 
 export function TradingProvider({ children }: { children: React.ReactNode }) {
   const [lastSignal, setLastSignal] = useState<AnalysisResponse | null>(null);
-  const [trades, setTrades] = useState<Trade[]>([]);
-  const [totalPnL, setTotalPnL] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [streakType, setStreakType] = useState<'win' | 'loss' | 'none'>('none');
+  const [tradesVersion, setTradesVersion] = useState(0);
+  const bumpTradesVersion = useCallback(() => setTradesVersion(v => v + 1), []);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [overshootStatus, setOvershootStatus] = useState<'idle' | 'active' | 'error'>('idle');
   const [startVision, setStartVisionFn] = useState<() => void>(() => () => {});
@@ -42,11 +35,6 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [chartFocusMode, setChartFocusMode] = useState(false);
-
-  const setStreakInfo = useCallback((s: number, t: 'win' | 'loss' | 'none') => {
-    setStreak(s);
-    setStreakType(t);
-  }, []);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -57,9 +45,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   return (
     <TradingContext.Provider value={{
       lastSignal, setLastSignal,
-      trades, setTrades,
-      totalPnL, setTotalPnL,
-      streak, streakType, setStreakInfo,
+      tradesVersion, bumpTradesVersion,
       isAnalyzing, setIsAnalyzing,
       overshootStatus, setOvershootStatus,
       startVision, setStartVision,

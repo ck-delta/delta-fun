@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RefreshCw, Eye, EyeOff, Monitor, Maximize2, Minimize2 } from 'lucide-react';
 import { useTradingContext } from '../context/TradingContext';
+import { loadTrades } from '../lib/tradesStore';
+import type { StoredTrade } from '../lib/tradesStore';
 
 const GECKO_URL =
   'https://www.geckoterminal.com/eth/pools/0x9db9e0e53058c89e5b94e29621a205198648425b?embed=1&info=0&swaps=0&light_chart=0&chart_type=price&resolution=15m&bg_color=111827';
@@ -14,13 +16,17 @@ export default function ChartPanel() {
   const [key, setKey] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [chartSource, setChartSource] = useState<ChartSource>('gecko');
-  const { overshootStatus, startVision, chartFocusMode, setChartFocusMode } = useTradingContext();
+  const [openTrades, setOpenTrades] = useState<StoredTrade[]>([]);
+  const { overshootStatus, startVision, chartFocusMode, setChartFocusMode, tradesVersion } = useTradingContext();
 
   const chartUrl = chartSource === 'gecko' ? GECKO_URL : TRADINGVIEW_URL;
-  const chartLabel = chartSource === 'gecko'
-    ? 'WBTC·USDT · Ethereum · 15m'
-    : 'BTCUSDT · Binance · 15m';
+  const chartLabel = chartSource === 'gecko' ? 'WBTC·USDT · Ethereum · 15m' : 'BTCUSDT · Binance · 15m';
   const chartSourceLabel = chartSource === 'gecko' ? 'GeckoTerminal' : 'TradingView';
+
+  // Sync open positions from localStorage whenever trades change
+  useEffect(() => {
+    setOpenTrades(loadTrades().slice(0, 3)); // show up to 3
+  }, [tradesVersion]);
 
   const switchSource = (src: ChartSource) => {
     if (src === chartSource) return;
@@ -57,7 +63,7 @@ export default function ChartPanel() {
 
           <span className="text-[#6b7280] text-xs">via {chartSourceLabel}</span>
 
-          {/* Focus mode toggle — only when vision is active */}
+          {/* Focus mode — only when vision active */}
           {overshootStatus === 'active' && (
             <button
               onClick={() => setChartFocusMode(!chartFocusMode)}
@@ -88,6 +94,7 @@ export default function ChartPanel() {
             </div>
           </div>
         )}
+
         <iframe
           key={key}
           src={chartUrl}
@@ -99,7 +106,28 @@ export default function ChartPanel() {
           style={{ border: 'none' }}
         />
 
-        {/* Vision banner — shown when idle or errored */}
+        {/* Open positions overlay */}
+        {loaded && openTrades.length > 0 && (
+          <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
+            {openTrades.map(t => (
+              <div
+                key={t.id}
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg backdrop-blur-sm border text-[10px] font-medium shadow-lg ${
+                  t.side === 'buy'
+                    ? 'bg-green-950/80 border-green-700/50 text-green-300'
+                    : 'bg-red-950/80 border-red-700/50 text-red-300'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${t.side === 'buy' ? 'bg-green-400' : 'bg-red-400'}`} />
+                <span className="uppercase font-bold">{t.side}</span>
+                <span className="text-white font-mono">${t.entryPrice.toLocaleString()}</span>
+                <span className="text-[#9ca3af]">{t.quantity} BTC</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Vision banner */}
         {loaded && overshootStatus !== 'active' && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 animate-fade-in">
             <button
@@ -111,22 +139,13 @@ export default function ChartPanel() {
               }`}
             >
               {overshootStatus === 'error' ? (
-                <>
-                  <EyeOff size={15} />
-                  Vision failed — retry
-                </>
+                <><EyeOff size={15} /> Vision failed — retry</>
               ) : (
-                <>
-                  <Monitor size={15} />
-                  Enable Chart Vision
-                  <span className="text-[10px] text-purple-400/70 ml-1">(select This Tab)</span>
-                </>
+                <><Monitor size={15} /> Enable Chart Vision <span className="text-[10px] text-purple-400/70 ml-1">(select This Tab)</span></>
               )}
             </button>
             {overshootStatus === 'idle' && (
-              <p className="text-center text-[10px] text-[#6b7280] mt-1.5">
-                AI will visually analyze this BTC chart
-              </p>
+              <p className="text-center text-[10px] text-[#6b7280] mt-1.5">AI will visually analyze this BTC chart</p>
             )}
           </div>
         )}
