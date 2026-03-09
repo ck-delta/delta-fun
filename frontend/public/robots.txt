@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://fun.stockyai.xyz/sitemap.xml
