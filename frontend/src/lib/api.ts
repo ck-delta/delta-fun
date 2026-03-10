@@ -32,11 +32,11 @@ export interface Trade {
 }
 
 export const api = {
-  async analyze(prompt: string, overshootResult?: string): Promise<AnalysisResponse> {
+  async analyze(prompt: string, coinId: string, coinSymbol: string, overshootResult?: string): Promise<AnalysisResponse> {
     const res = await fetch(`${API_URL}/api/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, overshootResult }),
+      body: JSON.stringify({ prompt, overshootResult, coin: coinId, coinSymbol }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({})) as { error?: string; detail?: string };
@@ -45,8 +45,8 @@ export const api = {
     return res.json();
   },
 
-  async getPrice(): Promise<number> {
-    const res = await fetch(`${API_URL}/api/market/price`);
+  async getPrice(coinId = 'bitcoin'): Promise<number> {
+    const res = await fetch(`${API_URL}/api/market/price?coin=${encodeURIComponent(coinId)}`);
     if (!res.ok) {
       const err = await res.json().catch(() => ({})) as { error?: string; detail?: string };
       throw new Error(err.detail ?? err.error ?? `Price fetch failed: HTTP ${res.status}`);

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { TradingProvider, useTradingContext } from './context/TradingContext';
+import { COINS } from './lib/coins';
 import ChartPanel from './components/ChartPanel';
 import PromptInput from './components/PromptInput';
 import SignalDisplay from './components/SignalDisplay';
@@ -37,7 +38,8 @@ function OvershootStatusDot() {
 }
 
 function AppInner() {
-  const { setStartVision, chartFocusMode } = useTradingContext();
+  const { setStartVision, chartFocusMode, selectedCoin } = useTradingContext();
+  const coin = COINS[selectedCoin];
   const { startVision } = useOvershoot();
 
   // Register startVision into context once — stable callback, runs once
@@ -50,7 +52,7 @@ function AppInner() {
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white text-xs font-black">S</div>
           <span className="text-white font-bold text-base tracking-tight">Stocky Fun</span>
-          <span className="text-[#6b7280] text-xs">BTC/USD · Paper Trading</span>
+          <span className="text-[#6b7280] text-xs">{coin.symbol}/USD · Paper Trading</span>
         </div>
         <div className="flex items-center gap-3 text-xs text-[#6b7280]">
           <OvershootStatusDot />

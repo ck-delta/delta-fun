@@ -3,9 +3,11 @@ import { ShoppingCart, TrendingUp, TrendingDown } from 'lucide-react';
 import { api } from '../lib/api';
 import { addTrade } from '../lib/tradesStore';
 import { useTradingContext } from '../context/TradingContext';
+import { COINS } from '../lib/coins';
 
 export default function OrderForm() {
-  const { lastSignal, showToast, bumpTradesVersion } = useTradingContext();
+  const { lastSignal, showToast, bumpTradesVersion, selectedCoin } = useTradingContext();
+  const coin = COINS[selectedCoin];
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [quantity, setQuantity] = useState('0.001');
   const [stopLoss, setStopLoss] = useState('');
@@ -19,19 +21,20 @@ export default function OrderForm() {
     else if (lastSignal?.signal === 'sell') setSide('sell');
   }, [lastSignal]);
 
-  // Fetch live price — 30s interval to avoid CoinGecko rate limits
+  // Fetch live price — 30s interval, re-runs when coin changes
   useEffect(() => {
     let cancelled = false;
+    setCurrentPrice(null);
     const update = async () => {
       try {
-        const p = await api.getPrice();
+        const p = await api.getPrice(coin.id);
         if (!cancelled) { setCurrentPrice(p); setPriceError(false); }
       } catch { if (!cancelled) setPriceError(true); }
     };
     update();
     const t = setInterval(update, 30000);
     return () => { cancelled = true; clearInterval(t); };
-  }, []);
+  }, [coin.id]);
 
   const handlePlace = async () => {
     const qty = parseFloat(quantity);
@@ -41,7 +44,7 @@ export default function OrderForm() {
     }
     setPlacing(true);
     try {
-      const entryPrice = await api.getPrice();
+      const entryPrice = await api.getPrice(coin.id);
       setCurrentPrice(entryPrice);
       setPriceError(false);
 
@@ -103,13 +106,13 @@ export default function OrderForm() {
         <div>
           <label className="text-[11px] text-[#6b7280] block mb-1">Symbol</label>
           <div className="bg-[#111827] border border-[#374151] rounded-lg px-3 py-2 text-sm text-[#9ca3af]">
-            BTC / USD (Paper)
+            {coin.symbol} / USD (Paper)
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[11px] text-[#6b7280] block mb-1">Quantity (BTC)</label>
+            <label className="text-[11px] text-[#6b7280] block mb-1">Quantity ({coin.symbol})</label>
             <input
               type="number"
               value={quantity}

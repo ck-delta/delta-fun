@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import type { AnalysisResponse } from '../lib/api';
+import type { CoinKey } from '../lib/coins';
 
 interface TradingContextValue {
   lastSignal: AnalysisResponse | null;
@@ -19,6 +20,8 @@ interface TradingContextValue {
   showToast: (message: string, type?: 'success' | 'error') => void;
   chartFocusMode: boolean;
   setChartFocusMode: (v: boolean) => void;
+  selectedCoin: CoinKey;
+  setSelectedCoin: (coin: CoinKey) => void;
 }
 
 const TradingContext = createContext<TradingContextValue | null>(null);
@@ -35,6 +38,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [chartFocusMode, setChartFocusMode] = useState(false);
+  const [selectedCoin, setSelectedCoin] = useState<CoinKey>('BTC');
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -52,6 +56,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       lastOvershootSnapshot, setLastOvershootSnapshot,
       toast, showToast,
       chartFocusMode, setChartFocusMode,
+      selectedCoin, setSelectedCoin,
     }}>
       {children}
     </TradingContext.Provider>

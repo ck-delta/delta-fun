@@ -21,8 +21,8 @@ interface GroqResponse {
   choices: { message: { content: string } }[];
 }
 
-function buildSystemPrompt(): string {
-  return `You are an expert BTC/USD technical analysis assistant for a trading dashboard.
+function buildSystemPrompt(symbol: string): string {
+  return `You are an expert ${symbol}/USD technical analysis assistant for a trading dashboard.
 Given real-time TA indicators and a user question, respond ONLY with valid JSON in this exact format:
 {
   "prediction": "up" | "down",
@@ -40,9 +40,9 @@ Rules:
 - Always return valid parseable JSON, nothing else`;
 }
 
-function buildUserMessage(ta: TASummary, userPrompt: string, overshootResult?: string): string {
+function buildUserMessage(ta: TASummary, userPrompt: string, symbol: string, overshootResult?: string): string {
   return `
-REAL-TIME BTC/USD TECHNICAL INDICATORS:
+REAL-TIME ${symbol}/USD TECHNICAL INDICATORS:
 - Price: $${ta.currentPrice.toLocaleString()}
 - EMA9: $${ta.ema9.toLocaleString()} (slope: ${ta.ema9Slope}) — price is ${ta.priceVsEma9} EMA9
 - EMA21: $${ta.ema21.toLocaleString()} (slope: ${ta.ema21Slope})
@@ -95,11 +95,12 @@ async function callGroqFetch(model: string, messages: ChatMessage[]): Promise<Gr
 export async function analyzeWithGroq(
   ta: TASummary,
   userPrompt: string,
+  symbol = 'BTC',
   overshootResult?: string
 ): Promise<AnalysisResult> {
   const messages: ChatMessage[] = [
-    { role: 'system', content: buildSystemPrompt() },
-    { role: 'user', content: buildUserMessage(ta, userPrompt, overshootResult) },
+    { role: 'system', content: buildSystemPrompt(symbol) },
+    { role: 'user', content: buildUserMessage(ta, userPrompt, symbol, overshootResult) },
   ];
 
   let completion: GroqResponse | null = null;

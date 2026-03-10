@@ -1,14 +1,16 @@
 import { Router, Request, Response } from 'express';
-import { fetchBTCOHLC } from '../services/coingecko';
+import { fetchOHLC } from '../services/coingecko';
 import { buildTASummary } from '../services/ta';
 import { analyzeWithGroq } from '../services/groq';
 
 const router = Router();
 
 router.post('/', async (req: Request, res: Response) => {
-  const { prompt, overshootResult } = req.body as {
+  const { prompt, overshootResult, coin, coinSymbol } = req.body as {
     prompt?: string;
     overshootResult?: string;
+    coin?: string;       // CoinGecko coin ID e.g. 'ethereum'
+    coinSymbol?: string; // Display symbol e.g. 'ETH'
   };
 
   if (!prompt) {
@@ -16,15 +18,18 @@ router.post('/', async (req: Request, res: Response) => {
     return;
   }
 
+  const coinId = coin ?? 'bitcoin';
+  const symbol = coinSymbol ?? 'BTC';
+
   try {
-    const candles = await fetchBTCOHLC(1);
+    const candles = await fetchOHLC(coinId, 1);
     if (candles.length < 10) {
       res.status(503).json({ error: 'Insufficient market data' });
       return;
     }
 
     const ta = buildTASummary(candles);
-    const result = await analyzeWithGroq(ta, prompt, overshootResult);
+    const result = await analyzeWithGroq(ta, prompt, symbol, overshootResult);
 
     res.json({ ...result, ta });
   } catch (err) {

@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { loadTrades, removeTrade, enrichTrades, calcStreak } from '../lib/tradesStore';
 import type { LiveTrade } from '../lib/tradesStore';
 import { useTradingContext } from '../context/TradingContext';
+import { COINS } from '../lib/coins';
 
 function toIST(ts: number): string {
   return new Date(ts).toLocaleString('en-IN', {
@@ -21,7 +22,8 @@ function streakLabel(streak: number, type: 'win' | 'loss' | 'none'): string {
 }
 
 export default function TradeHistory() {
-  const { tradesVersion, bumpTradesVersion } = useTradingContext();
+  const { tradesVersion, bumpTradesVersion, selectedCoin } = useTradingContext();
+  const coin = COINS[selectedCoin];
   const [tab, setTab] = useState<'positions' | 'history'>('positions');
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [liveTrades, setLiveTrades] = useState<LiveTrade[]>([]);
@@ -31,14 +33,13 @@ export default function TradeHistory() {
     const trades = loadTrades();
     if (trades.length === 0) { setLiveTrades([]); return; }
     try {
-      const price = await api.getPrice();
+      const price = await api.getPrice(coin.id);
       setLivePrice(price);
       setLiveTrades(enrichTrades(trades, price));
     } catch {
-      // Use last known price if available
       if (livePrice !== null) setLiveTrades(enrichTrades(trades, livePrice));
     }
-  }, [livePrice]);
+  }, [livePrice, coin.id]);
 
   // Refresh on trades change or every 30s
   useEffect(() => { void refresh(); }, [tradesVersion]);
