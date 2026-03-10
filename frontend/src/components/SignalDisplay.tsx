@@ -26,7 +26,7 @@ function ConfidenceBar({ value }: { value: number }) {
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="text-[9px] text-muted font-heading">{explanation}</p>
+      <p className="text-[10px] text-muted font-heading">{explanation}</p>
     </div>
   );
 }

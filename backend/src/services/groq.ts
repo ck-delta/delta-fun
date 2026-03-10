@@ -9,6 +9,8 @@ export interface AnalysisResult {
   signal: 'buy' | 'sell' | 'hold';
   rationale: string;
   keyLevels?: string;
+  action?: string;
+  risk?: string;
   modelUsed?: string;
 }
 
@@ -22,24 +24,29 @@ interface GroqResponse {
 }
 
 function buildSystemPrompt(symbol: string): string {
-  return `You are an expert ${symbol}/USD technical analysis assistant for a trading dashboard.
-Given real-time TA indicators and a user question, respond ONLY with valid JSON in this exact format:
+  return `You are a senior ${symbol}/USD crypto trader and technical analyst. You give specific, actionable analysis — never vague.
+
+Respond ONLY with valid JSON in this exact format:
 {
   "prediction": "up" | "down",
   "confidence": <number 0.0-1.0>,
   "signal": "buy" | "sell" | "hold",
-  "rationale": "<2-3 sentence explanation referencing specific TA values>",
-  "keyLevels": "<brief mention of key support/resistance and EMA levels>"
+  "rationale": "<3-5 sentence explanation with exact indicator values, price levels, and % distances>",
+  "keyLevels": "<support at $X, resistance at $Y, EMA200 at $Z>",
+  "action": "<specific next step: e.g. 'Enter long at $X with stop at $Y, target $Z (R:R 2.1:1)' or 'Wait for RSI to drop below 30 before entering'>",
+  "risk": "<what invalidates this thesis: e.g. 'Break below $X support invalidates the bullish setup — would flip bias bearish'>"
 }
 
-Rules:
-- confidence > 0.7 = buy/sell signal, else hold
-- Use the composite signalScore: score ≥ 4 = bullish bias, ≤ -4 = bearish bias
-- Be specific: reference MACD, RSI, Bollinger %B, Stochastic, EMA values
-- Keep rationale under 70 words
-- RSI > 70 = overbought, RSI < 30 = oversold; MACD bullish_cross = strong buy
-- Bollinger squeeze (bbSqueeze=true) = breakout incoming
-- Stochastic oversold + price near support = high-probability long setup
+RULES — follow strictly:
+- confidence > 0.7 → buy or sell; confidence ≤ 0.7 → hold
+- ALWAYS cite exact numbers: "RSI at 42" not "RSI neutral"; "$87,200 support" not "near support"
+- For buy/sell signals: include specific entry price, stop-loss level, and target with risk-reward ratio
+- For hold signals: explain exactly what would trigger a buy or sell (e.g. "buy if RSI drops below 30 while price holds $85k support")
+- Never say "mixed signals" — instead explain what's bullish vs bearish specifically
+- Cross-reference multiple indicators: e.g. "RSI 28 oversold + price at BB lower band ($84,500) + stochastic %K 15 = high-probability long"
+- Use the composite signalScore: ≥ 4 = bullish bias, ≤ -4 = bearish bias, between = contested
+- MACD bullish_cross = strong buy signal; Bollinger squeeze = imminent breakout
+- Keep rationale under 120 words but be specific — vague analysis is useless
 - Always return valid parseable JSON, nothing else`;
 }
 
@@ -93,7 +100,7 @@ async function callGroqFetch(model: string, messages: ChatMessage[]): Promise<Gr
         model,
         messages,
         temperature: 0.3,
-        max_tokens: 300,
+        max_tokens: 500,
         response_format: { type: 'json_object' },
       }),
       signal: controller.signal,
@@ -157,6 +164,8 @@ export async function analyzeWithGroq(
       : 'hold',
     rationale: parsed.rationale ?? 'Analysis inconclusive.',
     keyLevels: parsed.keyLevels,
+    action: parsed.action,
+    risk: parsed.risk,
     modelUsed,
   };
 }

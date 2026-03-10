@@ -5,7 +5,7 @@ import { overshootStore } from '../lib/overshootStore';
 import { COINS } from '../lib/coins';
 
 export function useAnalysis() {
-  const { setLastSignal, setIsAnalyzing, setLastOvershootSnapshot, showToast, selectedCoin } = useTradingContext();
+  const { setLastSignal, setIsAnalyzing, setLastOvershootSnapshot, setAnalysisTimestamp, showToast, selectedCoin } = useTradingContext();
 
   const analyze = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
@@ -18,6 +18,7 @@ export function useAnalysis() {
     try {
       const result = await api.analyze(prompt, coin.id, coin.symbol, overshootSnapshot);
       setLastSignal(result);
+      setAnalysisTimestamp(Date.now());
       setLastOvershootSnapshot(overshootSnapshot);
     } catch (err) {
       console.error('[analysis]', err);
@@ -26,7 +27,7 @@ export function useAnalysis() {
       setIsAnalyzing(false);
     }
   // overshootStore is a module ref, not React state — selectedCoin included in deps
-  }, [setLastSignal, setIsAnalyzing, setLastOvershootSnapshot, showToast, selectedCoin]);
+  }, [setLastSignal, setIsAnalyzing, setLastOvershootSnapshot, setAnalysisTimestamp, showToast, selectedCoin]);
 
   return { analyze };
 }

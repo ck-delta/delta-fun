@@ -215,7 +215,7 @@ export default function ChartPanel() {
                     <span className="text-muted text-[10px]">{t.quantity} {coin.symbol}</span>
                     {pnl !== null ? (
                       <span className={`text-[10px] font-mono font-semibold ${pnl >= 0 ? 'text-accent-green text-glow-green' : 'text-accent-red text-glow-red'}`}>
-                        {pnl >= 0 ? '+' : ''}{pnl.toFixed(2)} <span className="text-[9px] opacity-75">({pnlPct!.toFixed(2)}%)</span>
+                        {pnl >= 0 ? '+' : ''}{pnl.toFixed(2)} <span className="text-[10px] opacity-75">({pnlPct!.toFixed(2)}%)</span>
                       </span>
                     ) : (
                       <span className="text-muted text-[10px]">—</span>

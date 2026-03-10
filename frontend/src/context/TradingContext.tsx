@@ -16,6 +16,8 @@ interface TradingContextValue {
   setStartVision: (fn: () => void) => void;
   lastOvershootSnapshot: string | undefined;
   setLastOvershootSnapshot: (v: string | undefined) => void;
+  analysisTimestamp: number | null;
+  setAnalysisTimestamp: (v: number | null) => void;
   toast: { message: string; type: 'success' | 'error' } | null;
   showToast: (message: string, type?: 'success' | 'error') => void;
   chartFocusMode: boolean;
@@ -35,6 +37,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const [startVision, setStartVisionFn] = useState<() => void>(() => () => {});
   const setStartVision = useCallback((fn: () => void) => setStartVisionFn(() => fn), []);
   const [lastOvershootSnapshot, setLastOvershootSnapshot] = useState<string | undefined>(undefined);
+  const [analysisTimestamp, setAnalysisTimestamp] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [chartFocusMode, setChartFocusMode] = useState(false);
@@ -54,6 +57,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       overshootStatus, setOvershootStatus,
       startVision, setStartVision,
       lastOvershootSnapshot, setLastOvershootSnapshot,
+      analysisTimestamp, setAnalysisTimestamp,
       toast, showToast,
       chartFocusMode, setChartFocusMode,
       selectedCoin, setSelectedCoin,

@@ -6,6 +6,8 @@ export interface AnalysisResponse {
   signal: 'buy' | 'sell' | 'hold';
   rationale: string;
   keyLevels?: string;
+  action?: string;
+  risk?: string;
   modelUsed?: string;
   ta: {
     currentPrice: number;
