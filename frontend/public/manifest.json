@@ -1,0 +1,19 @@
+{
+  "name": "Stocky Fun — AI Crypto Trading Dashboard",
+  "short_name": "Stocky Fun",
+  "description": "AI-powered crypto trading dashboard with real-time charts, Groq LLM buy/sell signals, and paper trading for BTC, ETH, SOL, BNB & HYPE.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#050505",
+  "background_color": "#050505",
+  "orientation": "landscape",
+  "categories": ["finance", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

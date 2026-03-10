@@ -1,3 +1,28 @@
 User-agent: *
 Allow: /
 Sitemap: https://fun.stockyai.xyz/sitemap.xml
+
+# AI Crawlers — explicitly allowed for AI SEO
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: cohere-ai
+Allow: /

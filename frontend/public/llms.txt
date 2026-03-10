@@ -1,0 +1,32 @@
+# Stocky Fun
+
+> AI-powered crypto trading dashboard with real-time charts and paper trading.
+
+## About
+
+Stocky Fun is a free, browser-based AI-powered cryptocurrency trading dashboard. It provides real-time price charts, AI-generated buy/sell signals, comprehensive technical analysis, and a paper trading simulator — all in one interface.
+
+## Features
+
+- **Real-time Charts**: Live crypto charts via GeckoTerminal and TradingView embeds
+- **AI Trading Signals**: Natural language prompts analyzed by Groq LLM to generate buy/sell/hold signals with confidence scores
+- **Technical Analysis**: RSI, MACD, Bollinger Bands, Stochastic Oscillator, EMA (9/21/200), ATR, Support/Resistance levels
+- **Paper Trading**: Simulated trading with real-time PnL tracking, stop loss support, and trade history
+- **Multi-Coin Support**: BTC, ETH, SOL, BNB, and HYPE
+- **Visual Chart Analysis**: AI-powered visual chart reading via Overshoot.ai screen sharing
+- **Signal Scoring**: Composite signal score (-10 to +10) combining multiple technical indicators
+
+## Tech Stack
+
+- Frontend: React 19, TypeScript, Tailwind CSS, Vite
+- AI: Groq LLM (Llama 3), Overshoot.ai for visual analysis
+- Data: CoinGecko API, GeckoTerminal, TradingView
+- Deployment: Vercel (serverless)
+
+## URL
+
+https://fun.stockyai.xyz
+
+## Contact
+
+Visit https://fun.stockyai.xyz for the live application.
