@@ -1,10 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f97316"/>
-      <stop offset="100%" stop-color="#fbbf24"/>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f0f0f"/>
+      <stop offset="100%" stop-color="#050505"/>
     </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00ff66"/>
+      <stop offset="100%" stop-color="#00cc52"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
-  <rect width="32" height="32" rx="7" fill="url(#g)"/>
-  <text x="16" y="23" font-family="Arial Black, sans-serif" font-size="20" font-weight="900" text-anchor="middle" fill="white">S</text>
+  <!-- Dark rounded square -->
+  <rect width="32" height="32" rx="8" fill="url(#bg)"/>
+  <!-- Subtle border -->
+  <rect width="32" height="32" rx="8" fill="none" stroke="#222222" stroke-width="0.8"/>
+  <!-- Chart line accent -->
+  <path d="M5,22 L9,20 L13,17 L17,19 L21,13 L25,10 L27,8" fill="none" stroke="url(#accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" opacity="0.7"/>
+  <!-- Glow fill under chart -->
+  <path d="M5,22 L9,20 L13,17 L17,19 L21,13 L25,10 L27,8 L27,26 L5,26 Z" fill="#00ff66" opacity="0.08"/>
+  <!-- "S" letter -->
+  <text x="16" y="23.5" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-size="17" font-weight="900" text-anchor="middle" fill="#00ff66" filter="url(#glow)">S</text>
 </svg>

@@ -53,7 +53,7 @@ function AppInner() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-5 py-2.5 bg-paper border-b border-border-subtle flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent-green to-accent-green/60 flex items-center justify-center text-black text-xs font-black">S</div>
+          <img src="/favicon.svg" alt="Stocky Fun" className="w-7 h-7" />
           <span className="text-white font-heading font-bold text-base tracking-tight">Stocky Fun</span>
           <span className="text-muted text-xs font-heading">{coin.symbol}/USD · Paper Trading</span>
         </div>
