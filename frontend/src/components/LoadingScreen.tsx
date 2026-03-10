@@ -100,28 +100,36 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
         <span className="text-[#E3DED5] text-2xl tracking-widest opacity-60">* * *</span>
       </div>
 
-      {/* Center counter */}
-      <div className="relative z-10 flex items-start select-none">
-        <span
-          className="text-[#E3DED5] font-medium leading-none"
-          style={{
-            fontFamily: "'Inter', sans-serif",
-            fontSize: 'clamp(80px, 18vw, 280px)',
-            letterSpacing: '-0.05em',
-            fontVariantNumeric: 'tabular-nums',
-          }}
+      {/* Center counter + status */}
+      <div className="relative z-10 flex flex-col items-center select-none">
+        <div className="flex items-start">
+          <span
+            className="text-[#E3DED5] font-medium leading-none"
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: 'clamp(80px, 18vw, 280px)',
+              letterSpacing: '-0.05em',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {displayed}
+          </span>
+          <span
+            className="text-[#E3DED5] mt-[1.5vw] ml-[0.5vw]"
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: 'clamp(20px, 4vw, 64px)',
+            }}
+          >
+            %
+          </span>
+        </div>
+        <p
+          className="text-[#E3DED5] opacity-50 tracking-widest uppercase mt-2"
+          style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: 'clamp(11px, 1.2vw, 16px)' }}
         >
-          {displayed}
-        </span>
-        <span
-          className="text-[#E3DED5] mt-[1.5vw] ml-[0.5vw]"
-          style={{
-            fontFamily: "'Inter', sans-serif",
-            fontSize: 'clamp(20px, 4vw, 64px)',
-          }}
-        >
-          %
-        </span>
+          {LOG_MESSAGES[logIdx]}
+        </p>
       </div>
 
       {/* Rotating wireframe cube — pure CSS */}
