@@ -87,7 +87,7 @@ export default function SignalDisplay() {
                 {isUp ? '↑ UP' : '↓ DOWN'}
               </p>
               <p className="text-[10px] text-[#6b7280] uppercase tracking-wide">
-                {lastSignal.ta.trendBias} · RSI {lastSignal.ta.rsi}
+                {lastSignal.ta.trendBias} · RSI {lastSignal.ta.rsi} · Score {lastSignal.ta.signalScore > 0 ? '+' : ''}{lastSignal.ta.signalScore}
               </p>
             </div>
           </div>
@@ -101,21 +101,68 @@ export default function SignalDisplay() {
           <ConfidenceBar value={lastSignal.confidence} />
         </div>
 
+        {/* Signal score */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[10px] text-[#6b7280]">Signal Score</span>
+          <div className="flex-1 h-1.5 bg-[#374151] rounded-full overflow-hidden">
+            {/* Map score -10..+10 to 0..100% */}
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${lastSignal.ta.signalScore >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
+              style={{ width: `${Math.min(100, Math.max(0, (lastSignal.ta.signalScore + 10) * 5))}%` }}
+            />
+          </div>
+          <span className={`text-[10px] font-bold font-mono ${lastSignal.ta.signalScore >= 4 ? 'text-green-400' : lastSignal.ta.signalScore <= -4 ? 'text-red-400' : 'text-amber-400'}`}>
+            {lastSignal.ta.signalScore > 0 ? '+' : ''}{lastSignal.ta.signalScore}
+          </span>
+        </div>
+
         {/* TA quick stats */}
-        <div className="grid grid-cols-3 gap-2 mb-3 text-[10px]">
+        <div className="grid grid-cols-3 gap-1.5 mb-3 text-[10px]">
           <div className="bg-[#111827] rounded p-1.5 text-center">
-            <p className="text-[#6b7280]">EMA9</p>
-            <p className="text-white font-mono">${lastSignal.ta.ema9.toLocaleString()}</p>
+            <p className="text-[#6b7280]">RSI</p>
+            <p className={`font-mono font-semibold ${lastSignal.ta.rsiZone === 'overbought' ? 'text-red-400' : lastSignal.ta.rsiZone === 'oversold' ? 'text-green-400' : 'text-white'}`}>
+              {lastSignal.ta.rsi}
+            </p>
           </div>
           <div className="bg-[#111827] rounded p-1.5 text-center">
-            <p className="text-[#6b7280]">EMA21</p>
-            <p className="text-white font-mono">${lastSignal.ta.ema21.toLocaleString()}</p>
+            <p className="text-[#6b7280]">MACD</p>
+            <p className={`font-mono font-semibold ${lastSignal.ta.macdHistogram >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {lastSignal.ta.macdHistogram > 0 ? '+' : ''}{lastSignal.ta.macdHistogram}
+            </p>
           </div>
           <div className="bg-[#111827] rounded p-1.5 text-center">
-            <p className="text-[#6b7280]">Price</p>
-            <p className="text-white font-mono">${lastSignal.ta.currentPrice.toLocaleString()}</p>
+            <p className="text-[#6b7280]">Stoch %K</p>
+            <p className={`font-mono font-semibold ${lastSignal.ta.stochSignal === 'oversold' ? 'text-green-400' : lastSignal.ta.stochSignal === 'overbought' ? 'text-red-400' : 'text-white'}`}>
+              {lastSignal.ta.stochK}
+            </p>
+          </div>
+          <div className="bg-[#111827] rounded p-1.5 text-center">
+            <p className="text-[#6b7280]">BB %B</p>
+            <p className={`font-mono font-semibold ${lastSignal.ta.bbPctB > 0.8 ? 'text-red-400' : lastSignal.ta.bbPctB < 0.2 ? 'text-green-400' : 'text-white'}`}>
+              {lastSignal.ta.bbPctB}{lastSignal.ta.bbSqueeze ? ' 🤏' : ''}
+            </p>
+          </div>
+          <div className="bg-[#111827] rounded p-1.5 text-center">
+            <p className="text-[#6b7280]">Support</p>
+            <p className="text-white font-mono">${lastSignal.ta.support.toLocaleString()}</p>
+          </div>
+          <div className="bg-[#111827] rounded p-1.5 text-center">
+            <p className="text-[#6b7280]">Resist</p>
+            <p className="text-white font-mono">${lastSignal.ta.resistance.toLocaleString()}</p>
           </div>
         </div>
+
+        {/* MACD cross badge */}
+        {lastSignal.ta.macdCross !== 'none' && (
+          <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-semibold mb-3 ${
+            lastSignal.ta.macdCross === 'bullish_cross'
+              ? 'bg-green-500/15 text-green-400 border border-green-500/30'
+              : 'bg-red-500/15 text-red-400 border border-red-500/30'
+          }`}>
+            <span>{lastSignal.ta.macdCross === 'bullish_cross' ? '▲' : '▼'}</span>
+            <span>MACD {lastSignal.ta.macdCross === 'bullish_cross' ? 'Bullish' : 'Bearish'} Cross</span>
+          </div>
+        )}
 
         {/* Rationale */}
         <p className="text-[#d1d5db] text-xs leading-relaxed mb-2">{lastSignal.rationale}</p>

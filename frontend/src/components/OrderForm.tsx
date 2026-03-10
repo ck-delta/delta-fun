@@ -56,6 +56,7 @@ export default function OrderForm() {
         stopLoss: stopLoss ? parseFloat(stopLoss) : undefined,
         timestamp: Date.now(),
         signal: lastSignal?.signal,
+        coin: selectedCoin,
       });
       bumpTradesVersion();
       showToast(`Paper ${side.toUpperCase()} placed at $${entryPrice.toLocaleString()}`, 'success');

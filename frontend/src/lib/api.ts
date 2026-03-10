@@ -12,9 +12,32 @@ export interface AnalysisResponse {
     ema9: number;
     ema21: number;
     ema50: number;
+    ema200: number;
     ema9Slope: string;
+    ema21Slope: string;
+    priceVsEma9: 'above' | 'below';
+    priceVsEma200: 'above' | 'below';
     rsi: number;
+    rsiZone: 'overbought' | 'oversold' | 'neutral';
+    macd: number;
+    macdSignal: number;
+    macdHistogram: number;
+    macdCross: 'bullish_cross' | 'bearish_cross' | 'none';
+    bbUpper: number;
+    bbMiddle: number;
+    bbLower: number;
+    bbPctB: number;
+    bbSqueeze: boolean;
+    stochK: number;
+    stochD: number;
+    stochSignal: 'overbought' | 'oversold' | 'neutral';
+    atr: number;
+    support: number;
+    resistance: number;
+    candlePattern: string;
+    lastCandleColors: ('green' | 'red')[];
     trendBias: string;
+    signalScore: number;
   };
 }
 

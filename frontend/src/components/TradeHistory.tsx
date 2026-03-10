@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BarChart2, Flame, X, RefreshCw } from 'lucide-react';
 import { api } from '../lib/api';
-import { loadTrades, removeTrade, enrichTrades, calcStreak } from '../lib/tradesStore';
+import { loadTrades, loadTradesForCoin, removeTrade, enrichTrades, calcStreak } from '../lib/tradesStore';
 import type { LiveTrade } from '../lib/tradesStore';
 import { useTradingContext } from '../context/TradingContext';
 import { COINS } from '../lib/coins';
@@ -30,7 +30,7 @@ export default function TradeHistory() {
   const [closing, setClosing] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const trades = loadTrades();
+    const trades = loadTradesForCoin(selectedCoin);
     if (trades.length === 0) { setLiveTrades([]); return; }
     try {
       const price = await api.getPrice(coin.id);
@@ -39,7 +39,7 @@ export default function TradeHistory() {
     } catch {
       if (livePrice !== null) setLiveTrades(enrichTrades(trades, livePrice));
     }
-  }, [livePrice, coin.id]);
+  }, [livePrice, coin.id, selectedCoin]);
 
   // Refresh on trades change or every 30s
   useEffect(() => { void refresh(); }, [tradesVersion]);

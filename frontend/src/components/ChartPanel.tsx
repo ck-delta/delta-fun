@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, Eye, EyeOff, Monitor, Maximize2, Minimize2 } from 'lucide-react';
 import { useTradingContext } from '../context/TradingContext';
-import { loadTrades } from '../lib/tradesStore';
+import { loadTradesForCoin } from '../lib/tradesStore';
 import type { StoredTrade } from '../lib/tradesStore';
 import { api } from '../lib/api';
 import { COINS, COIN_KEYS, geckoUrl, tvUrl } from '../lib/coins';
@@ -45,8 +45,8 @@ export default function ChartPanel() {
 
   // Sync open positions from localStorage whenever trades change
   useEffect(() => {
-    setOpenTrades(loadTrades().slice(0, 3));
-  }, [tradesVersion]);
+    setOpenTrades(loadTradesForCoin(selectedCoin).slice(0, 3));
+  }, [tradesVersion, selectedCoin]);
 
   // Poll live price for PnL overlay — re-runs when coin changes
   useEffect(() => {
@@ -165,17 +165,18 @@ export default function ChartPanel() {
               const pnlPct = livePrice !== null
                 ? ((livePrice - t.entryPrice) / t.entryPrice) * 100 * (t.side === 'buy' ? 1 : -1)
                 : null;
-              const isGreen = t.side === 'buy';
+              const isBuy = t.side === 'buy';
+              const isProfitable = pnl !== null ? pnl >= 0 : isBuy;
               return (
                 <div
                   key={t.id}
                   className={`flex flex-col px-3 py-2 rounded-lg backdrop-blur-sm border shadow-lg min-w-[148px] ${
-                    isGreen ? 'bg-green-950/85 border-green-700/50' : 'bg-red-950/85 border-red-700/50'
+                    isBuy ? 'bg-green-950/85 border-green-700/50' : 'bg-red-950/85 border-red-700/50'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isGreen ? 'bg-green-400' : 'bg-red-400'}`} />
-                    <span className={`text-[11px] font-bold uppercase ${isGreen ? 'text-green-300' : 'text-red-300'}`}>{t.side}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isProfitable ? 'bg-green-400' : 'bg-red-400'}`} />
+                    <span className={`text-[11px] font-bold uppercase ${isBuy ? 'text-green-300' : 'text-red-300'}`}>{t.side}</span>
                     <span className="text-white text-[11px] font-mono ml-auto">${t.entryPrice.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between pl-3.5">

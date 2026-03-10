@@ -29,28 +29,46 @@ Given real-time TA indicators and a user question, respond ONLY with valid JSON 
   "confidence": <number 0.0-1.0>,
   "signal": "buy" | "sell" | "hold",
   "rationale": "<2-3 sentence explanation referencing specific TA values>",
-  "keyLevels": "<brief mention of key EMA support/resistance>"
+  "keyLevels": "<brief mention of key support/resistance and EMA levels>"
 }
 
 Rules:
 - confidence > 0.7 = buy/sell signal, else hold
-- Be specific: reference actual EMA values, RSI, candle patterns
-- Keep rationale under 60 words
-- If RSI > 70 = overbought warning, RSI < 30 = oversold opportunity
+- Use the composite signalScore: score ≥ 4 = bullish bias, ≤ -4 = bearish bias
+- Be specific: reference MACD, RSI, Bollinger %B, Stochastic, EMA values
+- Keep rationale under 70 words
+- RSI > 70 = overbought, RSI < 30 = oversold; MACD bullish_cross = strong buy
+- Bollinger squeeze (bbSqueeze=true) = breakout incoming
+- Stochastic oversold + price near support = high-probability long setup
 - Always return valid parseable JSON, nothing else`;
 }
 
 function buildUserMessage(ta: TASummary, userPrompt: string, symbol: string, overshootResult?: string): string {
   return `
 REAL-TIME ${symbol}/USD TECHNICAL INDICATORS:
-- Price: $${ta.currentPrice.toLocaleString()}
-- EMA9: $${ta.ema9.toLocaleString()} (slope: ${ta.ema9Slope}) — price is ${ta.priceVsEma9} EMA9
+Price: $${ta.currentPrice.toLocaleString()}
+
+EMAs:
+- EMA9: $${ta.ema9.toLocaleString()} (slope: ${ta.ema9Slope}) — price ${ta.priceVsEma9}
 - EMA21: $${ta.ema21.toLocaleString()} (slope: ${ta.ema21Slope})
 - EMA50: $${ta.ema50.toLocaleString()}
-- RSI(14): ${ta.rsi}
-- Last 5 candles: [${ta.lastCandleColors.join(', ')}]
-- Candle pattern: ${ta.candlePattern}
-- Overall trend bias: ${ta.trendBias}
+- EMA200: $${ta.ema200.toLocaleString()} — price ${ta.priceVsEma200} (long-term trend)
+
+Momentum:
+- RSI(14): ${ta.rsi} [${ta.rsiZone}]
+- MACD: ${ta.macd} | Signal: ${ta.macdSignal} | Histogram: ${ta.macdHistogram} | Cross: ${ta.macdCross}
+- Stochastic %K: ${ta.stochK} | %D: ${ta.stochD} [${ta.stochSignal}]
+
+Volatility:
+- Bollinger Bands: Upper $${ta.bbUpper.toLocaleString()} / Mid $${ta.bbMiddle.toLocaleString()} / Lower $${ta.bbLower.toLocaleString()}
+- BB %B: ${ta.bbPctB} (0=at lower, 0.5=middle, 1=at upper) | Squeeze: ${ta.bbSqueeze}
+- ATR(14): $${ta.atr}
+
+Structure:
+- Support: $${ta.support.toLocaleString()} | Resistance: $${ta.resistance.toLocaleString()}
+- Candle pattern (last 5): [${ta.lastCandleColors.join(', ')}] — ${ta.candlePattern}
+
+Composite Signal Score: ${ta.signalScore}/10 → trend bias: ${ta.trendBias.toUpperCase()}
 ${overshootResult ? `\nVISUAL CHART ANALYSIS (Overshoot.ai): ${overshootResult}` : ''}
 
 USER QUESTION: ${userPrompt}`;

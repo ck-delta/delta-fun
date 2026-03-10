@@ -8,6 +8,7 @@ export interface StoredTrade {
   stopLoss?: number;
   timestamp: number;
   signal?: string;
+  coin?: string; // CoinKey — optional for backward compat (legacy trades treated as BTC)
 }
 
 export interface LiveTrade extends StoredTrade {
@@ -40,6 +41,10 @@ export function removeTrade(id: string): void {
 
 export function clearTrades(): void {
   localStorage.removeItem(STORAGE_KEY);
+}
+
+export function loadTradesForCoin(coin: string): StoredTrade[] {
+  return loadTrades().filter(t => (t.coin ?? 'BTC') === coin);
 }
 
 export function calcPnL(trade: StoredTrade, currentPrice: number): { pnl: number; pnlPct: number } {
