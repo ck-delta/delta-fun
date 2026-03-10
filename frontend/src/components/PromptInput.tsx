@@ -4,9 +4,26 @@ import { useAnalysis } from '../hooks/useAnalysis';
 import { useTradingContext } from '../context/TradingContext';
 
 const EXAMPLE_PROMPTS = [
-  'Predict next 15-minute direction based on EMA movements',
-  'What color will the next candle be based on the last 5 candles?',
-  'Is BTC oversold or overbought right now?',
+  // Momentum / oscillators
+  'Is RSI confirming the current trend direction?',
+  'MACD histogram — is momentum accelerating or fading?',
+  'Stochastic oversold + EMA support — long setup?',
+  // Bollinger / volatility
+  'Bollinger squeeze detected — which way will it break?',
+  'Price touched BB lower band — mean reversion play?',
+  'Is ATR high enough to trade this move?',
+  // EMA structure
+  'EMA9 crossing EMA21 — is a trend starting?',
+  'Price below EMA200 — dead-cat bounce or reversal?',
+  'All EMAs aligned bullish — how strong is the trend?',
+  // Levels
+  'How close is price to key support or resistance?',
+  'Is price holding above or breaking the daily pivot?',
+  'Buy at support now — what is the risk/reward?',
+  // Combos / composite
+  'RSI oversold + MACD bullish cross — strong buy signal?',
+  'Signal score is negative — wait for better entry?',
+  'Day high or low — reversal or continuation expected?',
   'Should I buy or sell based on current RSI and EMA crossover?',
 ];
 
