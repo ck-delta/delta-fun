@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { TradingProvider, useTradingContext } from './context/TradingContext';
 import { COINS } from './lib/coins';
 import ChartPanel from './components/ChartPanel';
@@ -6,6 +6,7 @@ import PromptInput from './components/PromptInput';
 import SignalDisplay from './components/SignalDisplay';
 import OrderForm from './components/OrderForm';
 import TradeHistory from './components/TradeHistory';
+import LoadingScreen from './components/LoadingScreen';
 import { useOvershoot } from './hooks/useOvershoot';
 import { CheckCircle, XCircle } from 'lucide-react';
 
@@ -13,8 +14,10 @@ function Toast() {
   const { toast } = useTradingContext();
   if (!toast) return null;
   return (
-    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl text-sm font-medium animate-fade-in ${
-      toast.type === 'success' ? 'bg-green-900 border border-green-700 text-green-200' : 'bg-red-900 border border-red-700 text-red-200'
+    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-inner shadow-2xl text-sm font-medium animate-fade-in ${
+      toast.type === 'success'
+        ? 'bg-accent-green/10 border border-accent-green/30 text-accent-green'
+        : 'bg-accent-red/10 border border-accent-red/30 text-accent-red'
     }`}>
       {toast.type === 'success' ? <CheckCircle size={16} /> : <XCircle size={16} />}
       {toast.message}
@@ -28,9 +31,9 @@ function OvershootStatusDot() {
   return (
     <span className="flex items-center gap-1.5">
       <span className={`w-1.5 h-1.5 rounded-full ${
-        overshootStatus === 'active' ? 'bg-purple-400 animate-pulse' : 'bg-red-500'
+        overshootStatus === 'active' ? 'bg-accent-purple animate-pulse' : 'bg-accent-red'
       }`} />
-      <span className={overshootStatus === 'active' ? 'text-purple-400' : 'text-red-400'}>
+      <span className={overshootStatus === 'active' ? 'text-accent-purple' : 'text-accent-red'}>
         Vision {overshootStatus === 'active' ? 'on' : 'err'}
       </span>
     </span>
@@ -46,18 +49,18 @@ function AppInner() {
   useEffect(() => { setStartVision(startVision); }, [startVision, setStartVision]);
 
   return (
-    <div className="h-screen w-screen bg-[#111827] flex flex-col overflow-hidden">
+    <div className="h-screen w-screen bg-body flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-2.5 bg-[#1f2937] border-b border-[#374151] flex-shrink-0">
+      <div className="flex items-center justify-between px-5 py-2.5 bg-paper border-b border-border-subtle flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white text-xs font-black">S</div>
-          <span className="text-white font-bold text-base tracking-tight">Stocky Fun</span>
-          <span className="text-[#6b7280] text-xs">{coin.symbol}/USD · Paper Trading</span>
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent-green to-accent-green/60 flex items-center justify-center text-black text-xs font-black">S</div>
+          <span className="text-white font-heading font-bold text-base tracking-tight">Stocky Fun</span>
+          <span className="text-muted text-xs font-heading">{coin.symbol}/USD · Paper Trading</span>
         </div>
-        <div className="flex items-center gap-3 text-xs text-[#6b7280]">
+        <div className="flex items-center gap-3 text-xs text-muted font-heading">
           <OvershootStatusDot />
           <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse shadow-glow-green" />
             Live
           </span>
           <span>IST timezone</span>
@@ -67,12 +70,13 @@ function AppInner() {
       {/* Main layout: 60/40 split (or full chart in focus mode) */}
       <div className="flex flex-1 min-h-0">
         {/* Left: Chart */}
-        <div className={`h-full border-r border-[#374151] transition-all duration-300 ${chartFocusMode ? 'w-full' : 'w-[60%]'}`}>
+        <div className={`h-full border-r border-border-subtle transition-all duration-300 ${chartFocusMode ? 'w-full' : 'w-[60%]'}`}
+             style={{ background: 'linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%)' }}>
           <ChartPanel />
         </div>
 
         {/* Right: Controls — hidden in focus mode */}
-        <div className={`h-full flex flex-col min-h-0 overflow-hidden transition-all duration-300 ${chartFocusMode ? 'w-0 overflow-hidden' : 'w-[40%]'}`}>
+        <div className={`h-full bg-paper flex flex-col min-h-0 overflow-hidden transition-all duration-300 ${chartFocusMode ? 'w-0 overflow-hidden' : 'w-[40%]'}`}>
           <PromptInput />
           <SignalDisplay />
           <OrderForm />
@@ -86,8 +90,11 @@ function AppInner() {
 }
 
 export default function App() {
+  const [loaded, setLoaded] = useState(false);
+
   return (
     <TradingProvider>
+      {!loaded && <LoadingScreen onComplete={() => setLoaded(true)} />}
       <AppInner />
     </TradingProvider>
   );

@@ -73,29 +73,29 @@ export default function OrderForm() {
     : null;
 
   return (
-    <div className="p-4 border-b border-[#374151]">
+    <div className="p-4 border-b border-border-subtle">
       <div className="flex items-center gap-2 mb-3">
-        <ShoppingCart size={14} className="text-blue-400" />
-        <span className="text-xs font-medium text-[#9ca3af] uppercase tracking-wider">Paper Trade</span>
+        <ShoppingCart size={14} className="text-accent-blue" />
+        <span className="section-label text-white">Paper Trade</span>
         {lastSignal && (
-          <span className="ml-auto text-[10px] text-[#6b7280]">Signal auto-set</span>
+          <span className="ml-auto text-[10px] text-muted font-heading">Signal auto-set</span>
         )}
       </div>
 
       {/* Buy / Sell toggle */}
-      <div className="flex rounded-lg overflow-hidden border border-[#374151] mb-3">
+      <div className="flex rounded-full bg-body p-1 border border-border-subtle mb-3">
         <button
           onClick={() => setSide('buy')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold transition-colors ${
-            side === 'buy' ? 'bg-green-600 text-white' : 'bg-[#1f2937] text-[#6b7280] hover:text-white'
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-bold font-heading rounded-full transition-all ${
+            side === 'buy' ? 'bg-accent-green text-black shadow-glow-green' : 'text-muted hover:text-white'
           }`}
         >
           <TrendingUp size={14} /> BUY
         </button>
         <button
           onClick={() => setSide('sell')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold transition-colors ${
-            side === 'sell' ? 'bg-red-600 text-white' : 'bg-[#1f2937] text-[#6b7280] hover:text-white'
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-bold font-heading rounded-full transition-all ${
+            side === 'sell' ? 'bg-accent-red text-white shadow-glow-red' : 'text-muted hover:text-white'
           }`}
         >
           <TrendingDown size={14} /> SELL
@@ -105,44 +105,50 @@ export default function OrderForm() {
       {/* Fields */}
       <div className="space-y-2 mb-3">
         <div>
-          <label className="text-[11px] text-[#6b7280] block mb-1">Symbol</label>
-          <div className="bg-[#111827] border border-[#374151] rounded-lg px-3 py-2 text-sm text-[#9ca3af]">
+          <label className="text-[11px] text-muted block mb-1 font-heading tracking-wide uppercase">Symbol</label>
+          <div className="bg-body border border-border-subtle rounded-inner px-4 py-2.5 text-sm text-muted font-mono">
             {coin.symbol} / USD (Paper)
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[11px] text-[#6b7280] block mb-1">Quantity ({coin.symbol})</label>
-            <input
-              type="number"
-              value={quantity}
-              onChange={e => setQuantity(e.target.value)}
-              step="0.001"
-              min="0.001"
-              className="w-full bg-[#1f2937] border border-[#374151] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-            />
+            <label className="text-[11px] text-muted block mb-1 font-heading tracking-wide uppercase">Quantity</label>
+            <div className="relative">
+              <input
+                type="number"
+                value={quantity}
+                onChange={e => setQuantity(e.target.value)}
+                step="0.001"
+                min="0.001"
+                className="w-full bg-paper border border-border-subtle rounded-inner px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-accent-green focus:shadow-glow-green transition-all pr-14"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted font-heading font-bold pointer-events-none">{coin.symbol}</span>
+            </div>
           </div>
           <div>
-            <label className="text-[11px] text-[#6b7280] block mb-1">Stop Loss (USD)</label>
-            <input
-              type="number"
-              value={stopLoss}
-              onChange={e => setStopLoss(e.target.value)}
-              placeholder="Optional"
-              className="w-full bg-[#1f2937] border border-[#374151] rounded-lg px-3 py-2 text-sm text-white placeholder-[#6b7280] focus:outline-none focus:border-blue-500 transition-colors"
-            />
+            <label className="text-[11px] text-muted block mb-1 font-heading tracking-wide uppercase">Stop Loss</label>
+            <div className="relative">
+              <input
+                type="number"
+                value={stopLoss}
+                onChange={e => setStopLoss(e.target.value)}
+                placeholder="Optional"
+                className="w-full bg-paper border border-border-subtle rounded-inner px-4 py-2.5 text-sm text-white font-mono placeholder-muted-dim focus:outline-none focus:border-accent-green focus:shadow-glow-green transition-all pr-12"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted font-heading font-bold pointer-events-none">USD</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-between text-[11px] text-[#6b7280]">
+        <div className="flex justify-between text-[11px] text-muted font-heading">
           <span>Market price</span>
-          <span className={`font-mono ${priceError ? 'text-red-400' : 'text-white'}`}>
+          <span className={`font-mono ${priceError ? 'text-accent-red' : 'text-white'}`}>
             {priceError ? 'Unavailable' : currentPrice ? `$${currentPrice.toLocaleString()}` : 'Loading...'}
           </span>
         </div>
         {orderValue && (
-          <div className="flex justify-between text-[11px] text-[#6b7280]">
+          <div className="flex justify-between text-[11px] text-muted font-heading">
             <span>Order value</span>
             <span className="text-white font-mono">≈ ${orderValue}</span>
           </div>
@@ -152,10 +158,10 @@ export default function OrderForm() {
       <button
         onClick={handlePlace}
         disabled={placing}
-        className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all ${
+        className={`w-full py-3 rounded-inner text-sm font-bold font-heading uppercase tracking-wider transition-all ${
           side === 'buy'
-            ? 'bg-green-600 hover:bg-green-500 text-white'
-            : 'bg-red-600 hover:bg-red-500 text-white'
+            ? 'bg-accent-green hover:bg-accent-green/90 text-black shadow-glow-green hover:shadow-glow-green-strong'
+            : 'bg-accent-red hover:bg-accent-red/90 text-white shadow-glow-red'
         } disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         {placing ? (

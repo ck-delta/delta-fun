@@ -10,11 +10,11 @@ import type { CoinKey } from '../lib/coins';
 type ChartSource = 'gecko' | 'tradingview';
 
 const COIN_ACTIVE: Record<CoinKey, string> = {
-  BTC: 'text-orange-300 bg-orange-500/20 border-orange-500/30',
-  ETH: 'text-blue-300 bg-blue-500/20 border-blue-500/30',
-  SOL: 'text-purple-300 bg-purple-500/20 border-purple-500/30',
-  BNB: 'text-yellow-300 bg-yellow-500/20 border-yellow-500/30',
-  HYPE: 'text-cyan-300 bg-cyan-500/20 border-cyan-500/30',
+  BTC: 'text-orange-300 bg-orange-500/20 border-orange-500/30 shadow-[0_0_10px_rgba(251,146,60,0.15)]',
+  ETH: 'text-blue-300 bg-blue-500/20 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.15)]',
+  SOL: 'text-purple-300 bg-purple-500/20 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]',
+  BNB: 'text-yellow-300 bg-yellow-500/20 border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.15)]',
+  HYPE: 'text-cyan-300 bg-cyan-500/20 border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]',
 };
 
 export default function ChartPanel() {
@@ -70,19 +70,19 @@ export default function ChartPanel() {
   };
 
   return (
-    <div className="relative h-full flex flex-col bg-[#111827]">
+    <div className="relative h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-[#374151] bg-[#1f2937]">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border-subtle bg-paper">
         {/* Coin tabs */}
-        <div className="flex items-center gap-0.5 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0">
           {COIN_KEYS.map(c => (
             <button
               key={c}
               onClick={() => { if (c !== selectedCoin) { setSelectedCoin(c); } }}
-              className={`px-2 py-1 rounded text-[11px] font-bold transition-colors border ${
+              className={`px-2.5 py-1 rounded-full text-[11px] font-bold font-heading transition-all border ${
                 c === selectedCoin
                   ? COIN_ACTIVE[c]
-                  : 'text-[#6b7280] hover:text-white border-transparent'
+                  : 'text-muted hover:text-white border-transparent'
               }`}
             >
               {c}
@@ -90,24 +90,24 @@ export default function ChartPanel() {
           ))}
         </div>
 
-        <div className="w-px h-4 bg-[#374151] flex-shrink-0" />
+        <div className="w-px h-4 bg-border-subtle flex-shrink-0" />
 
-        <span className="text-[#6b7280] text-[11px] truncate flex-1 min-w-0">{chartLabel}</span>
+        <span className="text-muted text-[11px] truncate flex-1 min-w-0 font-heading">{chartLabel}</span>
 
         <div className="flex items-center gap-1 flex-shrink-0">
           {/* Source toggle */}
-          <div className="flex rounded overflow-hidden border border-[#374151] text-[10px]">
+          <div className="flex rounded-full overflow-hidden border border-border-subtle text-[10px] font-heading">
             {hasGecko && (
               <button
                 onClick={() => switchSource('gecko')}
-                className={`px-2 py-1 transition-colors ${chartSource === 'gecko' ? 'bg-orange-500/20 text-orange-300' : 'text-[#6b7280] hover:text-white'}`}
+                className={`px-2.5 py-1 transition-all ${chartSource === 'gecko' ? 'bg-orange-500/20 text-orange-300' : 'text-muted hover:text-white'}`}
               >
                 Gecko
               </button>
             )}
             <button
               onClick={() => switchSource('tradingview')}
-              className={`px-2 py-1 transition-colors ${chartSource === 'tradingview' || !hasGecko ? 'bg-blue-500/20 text-blue-300' : 'text-[#6b7280] hover:text-white'}`}
+              className={`px-2.5 py-1 transition-all ${chartSource === 'tradingview' || !hasGecko ? 'bg-blue-500/20 text-blue-300' : 'text-muted hover:text-white'}`}
             >
               TV
             </button>
@@ -116,7 +116,7 @@ export default function ChartPanel() {
           {overshootStatus === 'active' && (
             <button
               onClick={() => setChartFocusMode(!chartFocusMode)}
-              className="text-[#6b7280] hover:text-purple-300 transition-colors p-1 rounded"
+              className="text-muted hover:text-accent-purple transition-colors p-1 rounded"
               title={chartFocusMode ? 'Exit focus mode' : 'Expand chart for vision'}
             >
               {chartFocusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
@@ -125,7 +125,7 @@ export default function ChartPanel() {
 
           <button
             onClick={() => { setLoaded(false); setKey(k => k + 1); }}
-            className="text-[#6b7280] hover:text-white transition-colors p-1 rounded"
+            className="text-muted hover:text-white transition-colors p-1 rounded"
             title="Refresh chart"
           >
             <RefreshCw size={13} />
@@ -136,10 +136,10 @@ export default function ChartPanel() {
       {/* Chart */}
       <div id="chart-container" className="relative flex-1">
         {!loaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#111827] z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-body z-10">
             <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-2 border-[#374151] border-t-orange-400 rounded-full animate-spin" />
-              <span className="text-[#6b7280] text-sm">Loading {coin.symbol} chart...</span>
+              <div className="w-8 h-8 border-2 border-border-strong border-t-accent-green rounded-full animate-spin" />
+              <span className="text-muted text-sm font-heading">Loading {coin.symbol} chart...</span>
             </div>
           </div>
         )}
@@ -170,23 +170,23 @@ export default function ChartPanel() {
               return (
                 <div
                   key={t.id}
-                  className={`flex flex-col px-3 py-2 rounded-lg backdrop-blur-sm border shadow-lg min-w-[148px] ${
-                    isBuy ? 'bg-green-950/85 border-green-700/50' : 'bg-red-950/85 border-red-700/50'
+                  className={`flex flex-col px-3 py-2 rounded-inner backdrop-blur-sm border shadow-lg min-w-[148px] ${
+                    isBuy ? 'bg-accent-green/5 border-accent-green/20' : 'bg-accent-red/5 border-accent-red/20'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isProfitable ? 'bg-green-400' : 'bg-red-400'}`} />
-                    <span className={`text-[11px] font-bold uppercase ${isBuy ? 'text-green-300' : 'text-red-300'}`}>{t.side}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isProfitable ? 'bg-accent-green' : 'bg-accent-red'}`} />
+                    <span className={`text-[11px] font-bold uppercase font-heading ${isBuy ? 'text-accent-green' : 'text-accent-red'}`}>{t.side}</span>
                     <span className="text-white text-[11px] font-mono ml-auto">${t.entryPrice.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between pl-3.5">
-                    <span className="text-[#9ca3af] text-[10px]">{t.quantity} {coin.symbol}</span>
+                    <span className="text-muted text-[10px]">{t.quantity} {coin.symbol}</span>
                     {pnl !== null ? (
-                      <span className={`text-[10px] font-mono font-semibold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      <span className={`text-[10px] font-mono font-semibold ${pnl >= 0 ? 'text-accent-green text-glow-green' : 'text-accent-red text-glow-red'}`}>
                         {pnl >= 0 ? '+' : ''}{pnl.toFixed(2)} <span className="text-[9px] opacity-75">({pnlPct!.toFixed(2)}%)</span>
                       </span>
                     ) : (
-                      <span className="text-[#6b7280] text-[10px]">—</span>
+                      <span className="text-muted text-[10px]">—</span>
                     )}
                   </div>
                 </div>
@@ -200,36 +200,36 @@ export default function ChartPanel() {
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 animate-fade-in">
             <button
               onClick={startVision}
-              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-medium shadow-xl backdrop-blur-sm transition-all border ${
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-inner text-sm font-medium font-heading shadow-xl backdrop-blur-sm transition-all border ${
                 overshootStatus === 'error'
-                  ? 'bg-red-950/80 border-red-700/50 text-red-300 hover:bg-red-900/90'
-                  : 'bg-[#1e2636]/90 border-purple-500/30 text-purple-300 hover:bg-purple-900/40 hover:border-purple-500/60'
+                  ? 'bg-accent-red/10 border-accent-red/30 text-accent-red hover:bg-accent-red/20'
+                  : 'bg-surface/90 border-accent-purple/30 text-accent-purple hover:bg-accent-purple/10 hover:border-accent-purple/60 hover:shadow-glow-purple'
               }`}
             >
               {overshootStatus === 'error' ? (
                 <><EyeOff size={15} /> Vision failed — retry</>
               ) : (
-                <><Monitor size={15} /> Enable Chart Vision <span className="text-[10px] text-purple-400/70 ml-1">(select This Tab)</span></>
+                <><Monitor size={15} /> Enable Chart Vision <span className="text-[10px] text-accent-purple/70 ml-1">(select This Tab)</span></>
               )}
             </button>
             {overshootStatus === 'idle' && (
-              <p className="text-center text-[10px] text-[#6b7280] mt-1.5">AI will visually analyze this chart</p>
+              <p className="text-center text-[10px] text-muted mt-1.5">AI will visually analyze this chart</p>
             )}
           </div>
         )}
 
         {/* Vision active indicator */}
         {overshootStatus === 'active' && (
-          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-purple-950/70 border border-purple-700/40 backdrop-blur-sm">
-            <Eye size={11} className="text-purple-400 animate-pulse" />
-            <span className="text-[10px] text-purple-400 font-medium">Vision ON</span>
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2 py-1 rounded-inner bg-accent-purple/10 border border-accent-purple/30 backdrop-blur-sm">
+            <Eye size={11} className="text-accent-purple animate-pulse" />
+            <span className="text-[10px] text-accent-purple font-medium font-heading">Vision ON</span>
           </div>
         )}
       </div>
 
       {/* Disclaimer */}
-      <div className="px-4 py-1.5 bg-[#1f2937] border-t border-[#374151]">
-        <p className="text-[#6b7280] text-[10px] text-center">
+      <div className="px-4 py-1.5 bg-paper border-t border-border-subtle">
+        <p className="text-muted-dim text-[10px] text-center font-heading tracking-wide">
           Not financial advice · Paper trading only · Predictions are probabilistic
         </p>
       </div>

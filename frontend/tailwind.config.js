@@ -7,18 +7,38 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: {
-          primary: '#111827',
-          secondary: '#1f2937',
-          card: '#1e2636',
-          border: '#374151',
-        },
+        body: '#050505',
+        paper: '#0f0f0f',
+        surface: '#181818',
+        'surface-hover': '#1e1e1e',
+        'border-subtle': '#222222',
+        'border-strong': '#333333',
+        muted: '#888888',
+        'muted-dim': '#555555',
         accent: {
-          green: '#10b981',
-          red: '#ef4444',
+          green: '#00ff66',
+          red: '#ff3366',
           amber: '#f59e0b',
           blue: '#3b82f6',
-        }
+          purple: '#a855f7',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        heading: ['"Space Grotesk"', 'Inter', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'SF Mono', 'Consolas', 'monospace'],
+      },
+      borderRadius: {
+        card: '24px',
+        inner: '12px',
+        pill: '9999px',
+      },
+      boxShadow: {
+        'glow-green': '0 0 15px rgba(0, 255, 102, 0.2)',
+        'glow-green-strong': '0 0 25px rgba(0, 255, 102, 0.35)',
+        'glow-red': '0 0 15px rgba(255, 51, 102, 0.2)',
+        'glow-purple': '0 0 15px rgba(168, 85, 247, 0.3)',
+        'app-window': '0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.03)',
       },
       animation: {
         'pulse-green': 'pulse-green 1.5s ease-in-out infinite',
@@ -27,12 +47,12 @@ export default {
       },
       keyframes: {
         'pulse-green': {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0)' },
-          '50%': { boxShadow: '0 0 0 8px rgba(16, 185, 129, 0.3)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(0, 255, 102, 0)' },
+          '50%': { boxShadow: '0 0 0 8px rgba(0, 255, 102, 0.3)' },
         },
         'pulse-red': {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(239, 68, 68, 0)' },
-          '50%': { boxShadow: '0 0 0 8px rgba(239, 68, 68, 0.3)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(255, 51, 102, 0)' },
+          '50%': { boxShadow: '0 0 0 8px rgba(255, 51, 102, 0.3)' },
         },
         'fade-in': {
           from: { opacity: '0', transform: 'translateY(8px)' },
@@ -43,4 +63,3 @@ export default {
   },
   plugins: [],
 }
-
