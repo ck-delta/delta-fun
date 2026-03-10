@@ -55,6 +55,10 @@ body::before {
   text-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
 }
 
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;

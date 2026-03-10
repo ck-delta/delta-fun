@@ -106,7 +106,7 @@ export default function ChartPanel() {
       {/* Toolbar row */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border-subtle bg-paper flex-shrink-0">
         {/* Coin tabs */}
-        <div className="flex items-center gap-0.5 flex-shrink-0">
+        <div className="flex items-center gap-0.5 flex-shrink-0 overflow-x-auto scrollbar-hide">
           {COIN_KEYS.map(c => (
             <button
               key={c}

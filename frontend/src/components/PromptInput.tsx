@@ -80,15 +80,15 @@ export default function PromptInput() {
       <div className="flex flex-col gap-1.5 mb-3">
         {PROMPT_CATEGORIES.map(cat => (
           <div key={cat.label} className="flex items-start gap-2">
-            <span className={`text-[9px] font-bold uppercase tracking-wide flex-shrink-0 w-[62px] pt-1 font-heading ${cat.color}`}>
+            <span className={`text-[11px] font-bold uppercase tracking-wide flex-shrink-0 w-[68px] pt-1 font-heading ${cat.color}`}>
               {cat.label}
             </span>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {cat.prompts.map(p => (
                 <button
                   key={p}
                   onClick={() => setPrompt(p)}
-                  className="text-[10px] px-2.5 py-0.5 rounded-full bg-surface text-muted hover:bg-surface-hover hover:text-white hover:border-accent-green/30 transition-all border border-border-subtle leading-tight"
+                  className="text-[11px] px-2.5 py-1 rounded-full bg-surface text-muted hover:bg-surface-hover hover:text-white hover:border-accent-green/30 transition-all border border-border-subtle leading-snug"
                 >
                   {p}
                 </button>
@@ -105,7 +105,7 @@ export default function PromptInput() {
           onKeyDown={handleKeyDown}
           placeholder="Ask about BTC/USD... (⌘+Enter to submit)"
           rows={2}
-          className="w-full bg-paper border border-border-subtle rounded-inner px-4 py-3 text-sm text-white placeholder-muted-dim resize-none focus:outline-none focus:border-accent-green focus:shadow-glow-green transition-all pr-12"
+          className="w-full bg-paper border border-border-subtle rounded-inner px-4 py-3.5 text-sm text-white placeholder-muted-dim resize-none focus:outline-none focus:border-accent-green focus:shadow-glow-green transition-all pr-12"
         />
         <button
           onClick={handleSubmit}

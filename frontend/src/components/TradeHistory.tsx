@@ -67,7 +67,7 @@ export default function TradeHistory() {
           <BarChart2 size={14} className="text-accent-blue" />
           <span className="section-label text-white">Trading</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {label && (
             <span className={`text-xs font-bold font-heading px-2 py-0.5 rounded-full ${
               streakType === 'win' ? 'bg-accent-green/10 text-accent-green' : 'bg-accent-blue/10 text-accent-blue'
@@ -86,13 +86,13 @@ export default function TradeHistory() {
       <div className="flex rounded-full bg-body p-1 border border-border-subtle text-[11px]">
         <button
           onClick={() => setTab('positions')}
-          className={`flex-1 py-1.5 font-bold font-heading rounded-full transition-all ${tab === 'positions' ? 'bg-accent-green text-black shadow-glow-green' : 'text-muted hover:text-white'}`}
+          className={`flex-1 py-2 font-bold font-heading rounded-full transition-all ${tab === 'positions' ? 'bg-accent-green text-black shadow-glow-green' : 'text-muted hover:text-white'}`}
         >
           Positions ({liveTrades.length})
         </button>
         <button
           onClick={() => setTab('history')}
-          className={`flex-1 py-1.5 font-bold font-heading rounded-full transition-all ${tab === 'history' ? 'bg-surface text-white' : 'text-muted hover:text-white'}`}
+          className={`flex-1 py-2 font-bold font-heading rounded-full transition-all ${tab === 'history' ? 'bg-surface text-white' : 'text-muted hover:text-white'}`}
         >
           History
         </button>
@@ -109,14 +109,14 @@ export default function TradeHistory() {
       {/* Table */}
       <div className="flex-1 overflow-y-auto min-h-0">
         {liveTrades.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-24 gap-2">
+          <div className="flex flex-col items-center justify-center h-32 gap-2">
             <Flame size={20} className="text-border-strong" />
-            <p className="text-muted text-xs font-heading">No trades yet — place your first paper trade!</p>
+            <p className="text-muted text-sm font-heading">No trades yet — place your first paper trade!</p>
           </div>
         ) : tab === 'positions' ? (
           <div className="space-y-2">
             {liveTrades.map(trade => (
-              <div key={trade.id} className="bg-paper border border-border-subtle rounded-inner p-3 hover:bg-surface-hover transition-colors">
+              <div key={trade.id} className="bg-paper border border-border-subtle rounded-inner p-3.5 hover:bg-surface-hover transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase font-heading ${
@@ -146,7 +146,7 @@ export default function TradeHistory() {
                     <span className="text-muted font-heading">Unrealized PnL</span>
                     <span className={`font-mono font-semibold ${trade.pnl >= 0 ? 'text-accent-green text-glow-green' : 'text-accent-red text-glow-red'}`}>
                       {trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)} USD
-                      <span className="text-muted text-[9px] ml-1">({trade.pnlPct >= 0 ? '+' : ''}{trade.pnlPct.toFixed(2)}%)</span>
+                      <span className="text-muted text-[10px] ml-1">({trade.pnlPct >= 0 ? '+' : ''}{trade.pnlPct.toFixed(2)}%)</span>
                     </span>
                   </div>
                   {trade.stopLoss && (
@@ -156,7 +156,7 @@ export default function TradeHistory() {
                     </div>
                   )}
                 </div>
-                <div className="text-[9px] text-muted-dim mt-2 font-mono">{toIST(trade.timestamp)}</div>
+                <div className="text-[10px] text-muted mt-2 font-mono">{toIST(trade.timestamp)}</div>
               </div>
             ))}
           </div>
@@ -174,17 +174,17 @@ export default function TradeHistory() {
             <tbody>
               {liveTrades.map(trade => (
                 <tr key={trade.id} className="border-b border-border-subtle/50 hover:bg-surface-hover transition-colors">
-                  <td className="py-2">
+                  <td className="py-2.5">
                     <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase font-heading ${
                       trade.side === 'buy' ? 'bg-accent-green/10 text-accent-green' : 'bg-accent-red/10 text-accent-red'
                     }`}>{trade.side}</span>
                   </td>
-                  <td className="text-right py-2 font-mono text-white/80">${trade.entryPrice.toLocaleString()}</td>
-                  <td className="text-right py-2 font-mono text-white/80">{trade.quantity}</td>
-                  <td className={`text-right py-2 font-mono font-semibold ${trade.pnl >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                  <td className="text-right py-2.5 font-mono text-white/80">${trade.entryPrice.toLocaleString()}</td>
+                  <td className="text-right py-2.5 font-mono text-white/80">{trade.quantity}</td>
+                  <td className={`text-right py-2.5 font-mono font-semibold ${trade.pnl >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
                     {trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)}
                   </td>
-                  <td className="text-right py-2 text-muted text-[10px] font-mono">{toIST(trade.timestamp)}</td>
+                  <td className="text-right py-2.5 text-muted text-[10px] font-mono">{toIST(trade.timestamp)}</td>
                 </tr>
               ))}
             </tbody>

@@ -105,15 +105,15 @@ export default function OrderForm() {
       {/* Fields */}
       <div className="space-y-2 mb-3">
         <div>
-          <label className="text-[11px] text-muted block mb-1 font-heading tracking-wide uppercase">Symbol</label>
+          <label className="text-xs text-muted block mb-1 font-heading tracking-wide uppercase">Symbol</label>
           <div className="bg-body border border-border-subtle rounded-inner px-4 py-2.5 text-sm text-muted font-mono">
             {coin.symbol} / USD (Paper)
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
-            <label className="text-[11px] text-muted block mb-1 font-heading tracking-wide uppercase">Quantity</label>
+            <label className="text-xs text-muted block mb-1 font-heading tracking-wide uppercase">Quantity</label>
             <div className="relative">
               <input
                 type="number"
@@ -127,7 +127,7 @@ export default function OrderForm() {
             </div>
           </div>
           <div>
-            <label className="text-[11px] text-muted block mb-1 font-heading tracking-wide uppercase">Stop Loss</label>
+            <label className="text-xs text-muted block mb-1 font-heading tracking-wide uppercase">Stop Loss</label>
             <div className="relative">
               <input
                 type="number"
@@ -141,14 +141,14 @@ export default function OrderForm() {
           </div>
         </div>
 
-        <div className="flex justify-between text-[11px] text-muted font-heading">
+        <div className="flex justify-between text-xs text-muted font-heading pt-1">
           <span>Market price</span>
           <span className={`font-mono ${priceError ? 'text-accent-red' : 'text-white'}`}>
             {priceError ? 'Unavailable' : currentPrice ? `$${currentPrice.toLocaleString()}` : 'Loading...'}
           </span>
         </div>
         {orderValue && (
-          <div className="flex justify-between text-[11px] text-muted font-heading">
+          <div className="flex justify-between text-xs text-muted font-heading">
             <span>Order value</span>
             <span className="text-white font-mono">≈ ${orderValue}</span>
           </div>
@@ -158,7 +158,7 @@ export default function OrderForm() {
       <button
         onClick={handlePlace}
         disabled={placing}
-        className={`w-full py-3 rounded-inner text-sm font-bold font-heading uppercase tracking-wider transition-all ${
+        className={`w-full py-3.5 rounded-inner text-sm font-bold font-heading uppercase tracking-wider transition-all ${
           side === 'buy'
             ? 'bg-accent-green hover:bg-accent-green/90 text-black shadow-glow-green hover:shadow-glow-green-strong'
             : 'bg-accent-red hover:bg-accent-red/90 text-white shadow-glow-red'
