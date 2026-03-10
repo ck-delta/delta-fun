@@ -49,38 +49,40 @@ function AppInner() {
   useEffect(() => { setStartVision(startVision); }, [startVision, setStartVision]);
 
   return (
-    <div className="h-screen w-screen bg-body flex flex-col overflow-hidden">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-2.5 bg-paper border-b border-border-subtle flex-shrink-0">
-        <div className="flex items-center gap-2.5">
-          <img src="/favicon.svg" alt="Stocky Fun" className="w-7 h-7" />
-          <span className="text-white font-heading font-bold text-base tracking-tight">Stocky Fun</span>
-          <span className="text-muted text-xs font-heading">{coin.symbol}/USD · Paper Trading</span>
-        </div>
-        <div className="flex items-center gap-3 text-xs text-muted font-heading">
-          <OvershootStatusDot />
-          <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse shadow-glow-green" />
-            Live
-          </span>
-          <span>IST timezone</span>
-        </div>
-      </div>
-
-      {/* Main layout: 60/40 split (or full chart in focus mode) */}
-      <div className="flex flex-1 min-h-0">
-        {/* Left: Chart */}
-        <div className={`h-full border-r border-border-subtle transition-all duration-300 ${chartFocusMode ? 'w-full' : 'w-[60%]'}`}
-             style={{ background: 'linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%)' }}>
-          <ChartPanel />
+    <div className="h-screen w-screen bg-body flex items-center justify-center p-3 md:p-5 overflow-hidden">
+      {/* App window card */}
+      <div className="bg-paper rounded-card border border-border-subtle shadow-app-window w-full h-full flex flex-col overflow-hidden relative">
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-5 py-2.5 border-b border-border-subtle flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-accent-green flex items-center justify-center text-black text-xs font-black font-heading flex-shrink-0">S</div>
+            <span className="text-white font-heading font-bold text-sm tracking-tight">Stocky Fun</span>
+            <span className="text-muted text-[11px] font-mono">{coin.symbol}/USD · Paper</span>
+          </div>
+          <div className="flex items-center gap-3 text-[11px] text-muted font-heading">
+            <OvershootStatusDot />
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse shadow-glow-green" />
+              Live
+            </span>
+            <span className="hidden md:inline">IST</span>
+          </div>
         </div>
 
-        {/* Right: Controls — hidden in focus mode */}
-        <div className={`h-full bg-paper flex flex-col min-h-0 overflow-hidden transition-all duration-300 ${chartFocusMode ? 'w-0 overflow-hidden' : 'w-[40%]'}`}>
-          <PromptInput />
-          <SignalDisplay />
-          <OrderForm />
-          <TradeHistory />
+        {/* Main layout: 60/40 split (or full chart in focus mode) */}
+        <div className="flex flex-1 min-h-0">
+          {/* Left: Chart */}
+          <div className={`h-full border-r border-border-subtle transition-all duration-300 ${chartFocusMode ? 'w-full' : 'w-[60%]'}`}>
+            <ChartPanel />
+          </div>
+
+          {/* Right: Controls — hidden in focus mode */}
+          <div className={`h-full flex flex-col min-h-0 overflow-hidden transition-all duration-300 ${chartFocusMode ? 'w-0 overflow-hidden' : 'w-[40%]'}`}>
+            <PromptInput />
+            <SignalDisplay />
+            <OrderForm />
+            <TradeHistory />
+          </div>
         </div>
       </div>
 

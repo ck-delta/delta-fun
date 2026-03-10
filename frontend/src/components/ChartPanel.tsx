@@ -9,12 +9,12 @@ import type { CoinKey } from '../lib/coins';
 
 type ChartSource = 'gecko' | 'tradingview';
 
-const COIN_ACTIVE: Record<CoinKey, string> = {
-  BTC: 'text-orange-300 bg-orange-500/20 border-orange-500/30 shadow-[0_0_10px_rgba(251,146,60,0.15)]',
-  ETH: 'text-blue-300 bg-blue-500/20 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.15)]',
-  SOL: 'text-purple-300 bg-purple-500/20 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]',
-  BNB: 'text-yellow-300 bg-yellow-500/20 border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.15)]',
-  HYPE: 'text-cyan-300 bg-cyan-500/20 border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]',
+const COIN_NAMES: Record<CoinKey, string> = {
+  BTC: 'Bitcoin',
+  ETH: 'Ethereum',
+  SOL: 'Solana',
+  BNB: 'BNB Chain',
+  HYPE: 'Hyperliquid',
 };
 
 export default function ChartPanel() {
@@ -71,17 +71,49 @@ export default function ChartPanel() {
 
   return (
     <div className="relative h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-border-subtle bg-paper">
+      {/* Hero header row */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border-subtle bg-paper flex-shrink-0">
+        {/* Left: Coin name + subtitle */}
+        <div className="flex flex-col gap-0.5">
+          <span className="font-heading font-bold text-xl uppercase tracking-tight text-white leading-none">
+            {coin.symbol}/USD
+          </span>
+          <span className="text-[10px] text-muted font-heading uppercase tracking-widest">
+            {COIN_NAMES[selectedCoin]} · {chartSourceLabel} · 15m
+          </span>
+        </div>
+
+        {/* Right: Live price */}
+        <div className="flex flex-col items-end gap-0.5">
+          {livePrice !== null ? (
+            <>
+              <span className="font-mono font-bold text-xl text-white leading-none text-glow-green">
+                ${livePrice.toLocaleString()}
+              </span>
+              <span className="text-[10px] text-muted font-heading uppercase tracking-widest">
+                Live Price · USD
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="font-mono font-bold text-xl text-muted leading-none">—</span>
+              <span className="text-[10px] text-muted font-heading uppercase tracking-widest">Fetching...</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Toolbar row */}
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border-subtle bg-paper flex-shrink-0">
         {/* Coin tabs */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-0.5 flex-shrink-0">
           {COIN_KEYS.map(c => (
             <button
               key={c}
               onClick={() => { if (c !== selectedCoin) { setSelectedCoin(c); } }}
               className={`px-2.5 py-1 rounded-full text-[11px] font-bold font-heading transition-all border ${
                 c === selectedCoin
-                  ? COIN_ACTIVE[c]
+                  ? 'bg-accent-green/10 text-accent-green border-accent-green/30 shadow-glow-green'
                   : 'text-muted hover:text-white border-transparent'
               }`}
             >
@@ -90,24 +122,24 @@ export default function ChartPanel() {
           ))}
         </div>
 
-        <div className="w-px h-4 bg-border-subtle flex-shrink-0" />
+        <div className="w-px h-3.5 bg-border-subtle flex-shrink-0" />
 
-        <span className="text-muted text-[11px] truncate flex-1 min-w-0 font-heading">{chartLabel}</span>
+        <span className="text-muted text-[10px] truncate flex-1 min-w-0 font-heading hidden md:block">{chartLabel}</span>
 
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
           {/* Source toggle */}
           <div className="flex rounded-full overflow-hidden border border-border-subtle text-[10px] font-heading">
             {hasGecko && (
               <button
                 onClick={() => switchSource('gecko')}
-                className={`px-2.5 py-1 transition-all ${chartSource === 'gecko' ? 'bg-orange-500/20 text-orange-300' : 'text-muted hover:text-white'}`}
+                className={`px-2.5 py-1 transition-all ${chartSource === 'gecko' ? 'bg-accent-green/10 text-accent-green' : 'text-muted hover:text-white'}`}
               >
                 Gecko
               </button>
             )}
             <button
               onClick={() => switchSource('tradingview')}
-              className={`px-2.5 py-1 transition-all ${chartSource === 'tradingview' || !hasGecko ? 'bg-blue-500/20 text-blue-300' : 'text-muted hover:text-white'}`}
+              className={`px-2.5 py-1 transition-all ${chartSource === 'tradingview' || !hasGecko ? 'bg-surface text-white' : 'text-muted hover:text-white'}`}
             >
               TV
             </button>
