@@ -45,6 +45,7 @@ export default {
         'pulse-red': 'pulse-red 1.5s ease-in-out infinite',
         'fade-in': 'fade-in 0.3s ease-out',
         'slide-up': 'slide-up 0.25s ease-out',
+        'bounce-press': 'bounce-press 0.15s ease-out',
       },
       keyframes: {
         'pulse-green': {
@@ -62,6 +63,11 @@ export default {
         'slide-up': {
           from: { opacity: '0', transform: 'translateY(100%)' },
           to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'bounce-press': {
+          '0%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(0.95)' },
+          '100%': { transform: 'scale(1)' },
         },
       },
     },

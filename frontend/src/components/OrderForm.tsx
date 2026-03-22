@@ -6,13 +6,11 @@ import { useTradingContext } from '../context/TradingContext';
 import { COINS } from '../lib/coins';
 
 export default function OrderForm() {
-  const { lastSignal, showToast, bumpTradesVersion, selectedCoin } = useTradingContext();
+  const { lastSignal, showToast, bumpTradesVersion, selectedCoin, livePrice } = useTradingContext();
   const coin = COINS[selectedCoin];
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [quantity, setQuantity] = useState('0.001');
   const [stopLoss, setStopLoss] = useState('');
-  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
-  const [priceError, setPriceError] = useState(false);
   const [placing, setPlacing] = useState(false);
 
   // Auto-set side from signal
@@ -20,21 +18,6 @@ export default function OrderForm() {
     if (lastSignal?.signal === 'buy') setSide('buy');
     else if (lastSignal?.signal === 'sell') setSide('sell');
   }, [lastSignal]);
-
-  // Fetch live price — 30s interval, re-runs when coin changes
-  useEffect(() => {
-    let cancelled = false;
-    setCurrentPrice(null);
-    const update = async () => {
-      try {
-        const p = await api.getPrice(coin.id);
-        if (!cancelled) { setCurrentPrice(p); setPriceError(false); }
-      } catch { if (!cancelled) setPriceError(true); }
-    };
-    update();
-    const t = setInterval(update, 30000);
-    return () => { cancelled = true; clearInterval(t); };
-  }, [coin.id]);
 
   const handlePlace = async () => {
     const qty = parseFloat(quantity);
@@ -44,9 +27,8 @@ export default function OrderForm() {
     }
     setPlacing(true);
     try {
-      const entryPrice = await api.getPrice(coin.id);
-      setCurrentPrice(entryPrice);
-      setPriceError(false);
+      // Use live price from context, fallback to API
+      const entryPrice = livePrice ?? await api.getPrice(coin.id);
 
       addTrade({
         id: `T${Date.now()}`,
@@ -68,8 +50,8 @@ export default function OrderForm() {
     }
   };
 
-  const orderValue = currentPrice && parseFloat(quantity) > 0
-    ? (currentPrice * parseFloat(quantity)).toLocaleString('en-US', { maximumFractionDigits: 2 })
+  const orderValue = livePrice && parseFloat(quantity) > 0
+    ? (livePrice * parseFloat(quantity)).toLocaleString('en-US', { maximumFractionDigits: 2 })
     : null;
 
   return (
@@ -86,7 +68,7 @@ export default function OrderForm() {
       <div className="flex rounded-full bg-body p-1 border border-border-subtle mb-3">
         <button
           onClick={() => setSide('buy')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-bold font-heading rounded-full transition-all ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-bold font-heading rounded-full transition-all active:scale-95 ${
             side === 'buy' ? 'bg-accent-green text-black shadow-glow-green' : 'text-muted hover:text-white'
           }`}
         >
@@ -94,7 +76,7 @@ export default function OrderForm() {
         </button>
         <button
           onClick={() => setSide('sell')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-bold font-heading rounded-full transition-all ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-bold font-heading rounded-full transition-all active:scale-95 ${
             side === 'sell' ? 'bg-accent-red text-white shadow-glow-red' : 'text-muted hover:text-white'
           }`}
         >
@@ -122,6 +104,7 @@ export default function OrderForm() {
                 step="0.001"
                 min="0.001"
                 className="w-full bg-paper border border-border-subtle rounded-inner px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-accent-green focus:shadow-glow-green transition-all pr-14"
+                style={{ fontSize: '16px' }}
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted font-heading font-bold pointer-events-none">{coin.symbol}</span>
             </div>
@@ -135,6 +118,7 @@ export default function OrderForm() {
                 onChange={e => setStopLoss(e.target.value)}
                 placeholder="Optional"
                 className="w-full bg-paper border border-border-subtle rounded-inner px-4 py-2.5 text-sm text-white font-mono placeholder-muted-dim focus:outline-none focus:border-accent-green focus:shadow-glow-green transition-all pr-12"
+                style={{ fontSize: '16px' }}
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted font-heading font-bold pointer-events-none">USD</span>
             </div>
@@ -143,8 +127,8 @@ export default function OrderForm() {
 
         <div className="flex justify-between text-xs text-muted font-heading pt-1">
           <span>Market price</span>
-          <span className={`font-mono ${priceError ? 'text-accent-red' : 'text-white'}`}>
-            {priceError ? 'Unavailable' : currentPrice ? `$${currentPrice.toLocaleString()}` : 'Loading...'}
+          <span className={`font-mono ${livePrice ? 'text-white' : 'text-muted'}`}>
+            {livePrice ? `$${livePrice.toLocaleString()}` : 'Loading...'}
           </span>
         </div>
         {orderValue && (
@@ -158,7 +142,7 @@ export default function OrderForm() {
       <button
         onClick={handlePlace}
         disabled={placing}
-        className={`w-full py-3.5 rounded-inner text-sm font-bold font-heading uppercase tracking-wider transition-all ${
+        className={`w-full py-3.5 rounded-inner text-sm font-bold font-heading uppercase tracking-wider transition-all active:scale-95 ${
           side === 'buy'
             ? 'bg-accent-green hover:bg-accent-green/90 text-black shadow-glow-green hover:shadow-glow-green-strong'
             : 'bg-accent-red hover:bg-accent-red/90 text-white shadow-glow-red'

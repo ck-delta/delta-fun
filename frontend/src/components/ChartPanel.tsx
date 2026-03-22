@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import { RefreshCw, Eye, EyeOff, Monitor, Maximize2, Minimize2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Eye, EyeOff, Monitor, Maximize2, Minimize2 } from 'lucide-react';
 import { useTradingContext } from '../context/TradingContext';
 import { loadTradesForCoin } from '../lib/tradesStore';
 import type { StoredTrade } from '../lib/tradesStore';
-import { api } from '../lib/api';
-import { COINS, COIN_KEYS, geckoUrl, tvUrl } from '../lib/coins';
+import { COINS, COIN_KEYS } from '../lib/coins';
 import type { CoinKey } from '../lib/coins';
-
-type ChartSource = 'gecko' | 'tradingview';
+import NeonChart from './NeonChart';
+import PriceTicker from './PriceTicker';
+import type { Interval } from '../hooks/useBinanceKlines';
 
 const COIN_NAMES: Record<CoinKey, string> = {
   BTC: 'Bitcoin',
@@ -17,89 +17,52 @@ const COIN_NAMES: Record<CoinKey, string> = {
   HYPE: 'Hyperliquid',
 };
 
+const INTERVALS: { label: string; value: Interval }[] = [
+  { label: '1s', value: '1s' },
+  { label: '1m', value: '1m' },
+  { label: '5m', value: '5m' },
+  { label: '15m', value: '15m' },
+];
+
 export default function ChartPanel() {
-  const [key, setKey] = useState(0);
-  const [loaded, setLoaded] = useState(false);
-  const [chartSource, setChartSource] = useState<ChartSource>('gecko');
+  const [interval, setInterval_] = useState<Interval>('1m');
   const [openTrades, setOpenTrades] = useState<StoredTrade[]>([]);
-  const [livePrice, setLivePrice] = useState<number | null>(null);
-  const { overshootStatus, startVision, chartFocusMode, setChartFocusMode, tradesVersion, selectedCoin, setSelectedCoin } = useTradingContext();
+  const { overshootStatus, startVision, chartFocusMode, setChartFocusMode, tradesVersion, selectedCoin, setSelectedCoin, livePrice, setLivePrice } = useTradingContext();
 
   const coin = COINS[selectedCoin];
-  const hasGecko = !!(coin.geckoNet && coin.geckoPool);
 
-  // When coin changes, pick best available source and reload
+  // Reset price when coin changes
   useEffect(() => {
-    if (!hasGecko) setChartSource('tradingview');
-    setLoaded(false);
-    setKey(k => k + 1);
     setLivePrice(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCoin]);
+  }, [selectedCoin, setLivePrice]);
 
-  const chartUrl = chartSource === 'gecko' && hasGecko ? geckoUrl(coin)! : tvUrl(coin);
-  const chartLabel = chartSource === 'gecko' && hasGecko
-    ? `${coin.geckoLabel} · 15m`
-    : `${coin.symbol}/USDT · Binance · 15m`;
-  const chartSourceLabel = chartSource === 'gecko' && hasGecko ? 'GeckoTerminal' : 'TradingView';
-
-  // Sync open positions from localStorage whenever trades change
+  // Sync open positions
   useEffect(() => {
     setOpenTrades(loadTradesForCoin(selectedCoin).slice(0, 3));
   }, [tradesVersion, selectedCoin]);
 
-  // Poll live price for PnL overlay — re-runs when coin changes
-  useEffect(() => {
-    let cancelled = false;
-    const update = async () => {
-      try {
-        const p = await api.getPrice(coin.id);
-        if (!cancelled) setLivePrice(p);
-      } catch { /* silent */ }
-    };
-    update();
-    const t = setInterval(update, 30000);
-    return () => { cancelled = true; clearInterval(t); };
-  }, [coin.id]);
-
-  const switchSource = (src: ChartSource) => {
-    if (src === chartSource) return;
-    setChartSource(src);
-    setLoaded(false);
-    setKey(k => k + 1);
-  };
+  // Price update from NeonChart WebSocket → context
+  const handlePriceUpdate = useCallback((price: number) => {
+    setLivePrice(price);
+  }, [setLivePrice]);
 
   return (
     <div className="relative h-full flex flex-col">
       {/* Hero header row — desktop only */}
       <div className="hidden lg:flex items-center justify-between px-5 py-3 border-b border-border-subtle bg-paper flex-shrink-0">
-        {/* Left: Coin name + subtitle */}
         <div className="flex flex-col gap-0.5">
           <span className="font-heading font-bold text-xl uppercase tracking-tight text-white leading-none">
             {coin.symbol}/USD
           </span>
           <span className="text-[10px] text-muted font-heading uppercase tracking-widest">
-            {COIN_NAMES[selectedCoin]} · {chartSourceLabel} · 15m
+            {COIN_NAMES[selectedCoin]} · Binance · {interval}
           </span>
         </div>
-
-        {/* Right: Live price */}
         <div className="flex flex-col items-end gap-0.5">
-          {livePrice !== null ? (
-            <>
-              <span className="font-mono font-bold text-xl text-white leading-none text-glow-green">
-                ${livePrice.toLocaleString()}
-              </span>
-              <span className="text-[10px] text-muted font-heading uppercase tracking-widest">
-                Live Price · USD
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="font-mono font-bold text-xl text-muted leading-none">—</span>
-              <span className="text-[10px] text-muted font-heading uppercase tracking-widest">Fetching...</span>
-            </>
-          )}
+          <PriceTicker price={livePrice} className="text-xl" />
+          <span className="text-[10px] text-muted font-heading uppercase tracking-widest">
+            Live Price · USD
+          </span>
         </div>
       </div>
 
@@ -110,7 +73,7 @@ export default function ChartPanel() {
           {COIN_KEYS.map(c => (
             <button
               key={c}
-              onClick={() => { if (c !== selectedCoin) { setSelectedCoin(c); } }}
+              onClick={() => { if (c !== selectedCoin) setSelectedCoin(c); }}
               className={`px-2.5 py-1 rounded-full text-[11px] font-bold font-heading transition-all border ${
                 c === selectedCoin
                   ? 'bg-accent-green/10 text-accent-green border-accent-green/30 shadow-glow-green'
@@ -124,25 +87,26 @@ export default function ChartPanel() {
 
         <div className="w-px h-3.5 bg-border-subtle flex-shrink-0" />
 
-        <span className="text-muted text-[10px] truncate flex-1 min-w-0 font-heading hidden md:block">{chartLabel}</span>
+        <span className="text-muted text-[10px] truncate flex-1 min-w-0 font-heading hidden md:block">
+          {coin.symbol}/USDT · Binance · {interval}
+        </span>
 
         <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
-          {/* Source toggle */}
+          {/* Timeframe selector */}
           <div className="flex rounded-full overflow-hidden border border-border-subtle text-[10px] font-heading">
-            {hasGecko && (
+            {INTERVALS.map(tf => (
               <button
-                onClick={() => switchSource('gecko')}
-                className={`px-2.5 py-1 transition-all ${chartSource === 'gecko' ? 'bg-accent-green/10 text-accent-green' : 'text-muted hover:text-white'}`}
+                key={tf.value}
+                onClick={() => setInterval_(tf.value)}
+                className={`px-2.5 py-1 transition-all ${
+                  interval === tf.value
+                    ? 'bg-accent-green/10 text-accent-green'
+                    : 'text-muted hover:text-white'
+                }`}
               >
-                Gecko
+                {tf.label}
               </button>
-            )}
-            <button
-              onClick={() => switchSource('tradingview')}
-              className={`px-2.5 py-1 transition-all ${chartSource === 'tradingview' || !hasGecko ? 'bg-surface text-white' : 'text-muted hover:text-white'}`}
-            >
-              TV
-            </button>
+            ))}
           </div>
 
           {overshootStatus === 'active' && (
@@ -154,68 +118,39 @@ export default function ChartPanel() {
               {chartFocusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
             </button>
           )}
-
-          <button
-            onClick={() => { setLoaded(false); setKey(k => k + 1); }}
-            className="text-muted hover:text-white transition-colors p-1 rounded"
-            title="Refresh chart"
-          >
-            <RefreshCw size={13} />
-          </button>
         </div>
       </div>
 
-      {/* Chart — crop iframe toolbar on mobile */}
-      <div id="chart-container" className="relative flex-1 overflow-hidden">
-        {!loaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-body z-10">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-2 border-border-strong border-t-accent-green rounded-full animate-spin" />
-              <span className="text-muted text-sm font-heading">Loading {coin.symbol} chart...</span>
-            </div>
-          </div>
-        )}
+      {/* Mobile timeframe selector */}
+      <div className="flex lg:hidden items-center justify-between px-3 py-1.5 border-b border-border-subtle bg-paper flex-shrink-0">
+        <div className="flex rounded-full overflow-hidden border border-border-subtle text-[10px] font-heading">
+          {INTERVALS.map(tf => (
+            <button
+              key={tf.value}
+              onClick={() => setInterval_(tf.value)}
+              className={`px-2.5 py-1 transition-all ${
+                interval === tf.value
+                  ? 'bg-accent-green/10 text-accent-green'
+                  : 'text-muted hover:text-white'
+              }`}
+            >
+              {tf.label}
+            </button>
+          ))}
+        </div>
+        <PriceTicker price={livePrice} className="text-sm" />
+      </div>
 
-        <iframe
-          key={key}
-          src={chartUrl}
-          title={`${coin.symbol}/USD ${chartSourceLabel} Chart`}
-          frameBorder="0"
-          allowFullScreen
-          onLoad={() => setLoaded(true)}
-          className="w-full h-full iframe-crop-mobile"
-          style={{ border: 'none' }}
+      {/* Chart */}
+      <div className="relative flex-1 overflow-hidden">
+        <NeonChart
+          coin={coin}
+          interval={interval}
+          onPriceUpdate={handlePriceUpdate}
         />
 
-        {/* Mobile chart controls overlay */}
-        <div className="absolute top-2 right-2 z-20 flex items-center gap-1 lg:hidden">
-          <div className="flex rounded-full overflow-hidden border border-border-subtle/50 text-[9px] font-heading backdrop-blur-sm bg-body/70">
-            {hasGecko && (
-              <button
-                onClick={() => switchSource('gecko')}
-                className={`px-2 py-1 transition-all ${chartSource === 'gecko' ? 'bg-accent-green/15 text-accent-green' : 'text-muted'}`}
-              >
-                G
-              </button>
-            )}
-            <button
-              onClick={() => switchSource('tradingview')}
-              className={`px-2 py-1 transition-all ${chartSource === 'tradingview' || !hasGecko ? 'bg-surface text-white' : 'text-muted'}`}
-            >
-              TV
-            </button>
-          </div>
-          <button
-            onClick={() => { setLoaded(false); setKey(k => k + 1); }}
-            className="text-muted hover:text-white transition-colors p-1.5 rounded backdrop-blur-sm bg-body/70 border border-border-subtle/50"
-            title="Refresh chart"
-          >
-            <RefreshCw size={11} />
-          </button>
-        </div>
-
         {/* Open positions overlay */}
-        {loaded && openTrades.length > 0 && (
+        {openTrades.length > 0 && (
           <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
             {openTrades.map(t => {
               const pnl = livePrice !== null
@@ -255,7 +190,7 @@ export default function ChartPanel() {
         )}
 
         {/* Vision banner — desktop only */}
-        {loaded && overshootStatus !== 'active' && (
+        {overshootStatus !== 'active' && (
           <div className="hidden lg:block absolute bottom-4 left-1/2 -translate-x-1/2 z-20 animate-fade-in">
             <button
               onClick={startVision}

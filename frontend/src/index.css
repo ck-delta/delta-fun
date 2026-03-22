@@ -6,6 +6,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -55,36 +56,30 @@ body::before {
   text-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
 }
 
+/* Neon glow on interactive elements */
+.neon-hover-green:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 102, 0.3), 0 0 40px rgba(0, 255, 102, 0.1);
+}
+.neon-hover-red:hover {
+  box-shadow: 0 0 20px rgba(255, 51, 102, 0.3), 0 0 40px rgba(255, 51, 102, 0.1);
+}
+
+/* Pulsing border glow for active signals */
+@keyframes neon-border-pulse {
+  0%, 100% { border-color: rgba(0, 255, 102, 0.3); }
+  50% { border-color: rgba(0, 255, 102, 0.7); }
+}
+.neon-border-pulse {
+  animation: neon-border-pulse 2s ease-in-out infinite;
+}
+
 /* Hide scrollbar utility */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Scroll-snap for swipeable panels */
-.snap-container {
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-.snap-child {
-  scroll-snap-align: start;
-}
-
-/* Swipe hint animation */
-@keyframes swipe-hint {
-  0%   { opacity: 0; transform: translateX(0); }
-  15%  { opacity: 0.7; }
-  60%  { opacity: 0.7; transform: translateX(-60px); }
-  100% { opacity: 0; transform: translateX(-60px); }
-}
-.swipe-hint-anim {
-  animation: swipe-hint 2.5s ease-out forwards;
-}
-
-/* Crop GeckoTerminal iframe toolbar on mobile */
-@media (max-width: 1023px) {
-  .iframe-crop-mobile {
-    margin-top: -2.5rem;
-    height: calc(100% + 2.5rem) !important;
-  }
+/* Prevent iOS zoom on inputs */
+input, select, textarea {
+  font-size: 16px;
 }
 
 /* Scrollbar */

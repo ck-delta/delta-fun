@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BarChart2, Flame, X, RefreshCw } from 'lucide-react';
-import { api } from '../lib/api';
 import { loadTradesForCoin, removeTrade, enrichTrades, calcStreak } from '../lib/tradesStore';
 import type { LiveTrade } from '../lib/tradesStore';
 import { useTradingContext } from '../context/TradingContext';
 import { COINS } from '../lib/coins';
+import { fireProfitConfetti } from '../hooks/useDopamine';
+import { showProfitPopup } from './ProfitPopup';
 
 function toIST(ts: number): string {
   return new Date(ts).toLocaleString('en-IN', {
@@ -22,33 +23,31 @@ function streakLabel(streak: number, type: 'win' | 'loss' | 'none'): string {
 }
 
 export default function TradeHistory() {
-  const { tradesVersion, bumpTradesVersion, selectedCoin } = useTradingContext();
+  const { tradesVersion, bumpTradesVersion, selectedCoin, livePrice } = useTradingContext();
   const coin = COINS[selectedCoin];
   const [tab, setTab] = useState<'positions' | 'history'>('positions');
-  const [livePrice, setLivePrice] = useState<number | null>(null);
   const [liveTrades, setLiveTrades] = useState<LiveTrade[]>([]);
   const [closing, setClosing] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(() => {
     const trades = loadTradesForCoin(selectedCoin);
     if (trades.length === 0) { setLiveTrades([]); return; }
-    try {
-      const price = await api.getPrice(coin.id);
-      setLivePrice(price);
-      setLiveTrades(enrichTrades(trades, price));
-    } catch {
-      if (livePrice !== null) setLiveTrades(enrichTrades(trades, livePrice));
+    if (livePrice !== null) {
+      setLiveTrades(enrichTrades(trades, livePrice));
     }
-  }, [livePrice, coin.id, selectedCoin]);
+  }, [livePrice, selectedCoin]);
 
-  // Refresh on trades change or every 30s
-  useEffect(() => { void refresh(); }, [tradesVersion]);
-  useEffect(() => {
-    const t = setInterval(() => void refresh(), 30000);
-    return () => clearInterval(t);
-  }, [refresh]);
+  // Refresh when trades or price change
+  useEffect(() => { refresh(); }, [tradesVersion, livePrice, refresh]);
 
-  const handleClose = async (id: string) => {
+  const handleClose = (id: string) => {
+    // Check PnL before closing for dopamine effect
+    const trade = liveTrades.find(t => t.id === id);
+    if (trade && trade.pnl > 0) {
+      fireProfitConfetti();
+      showProfitPopup(trade.pnl);
+    }
+
     setClosing(id);
     removeTrade(id);
     bumpTradesVersion();
@@ -76,7 +75,7 @@ export default function TradeHistory() {
           <span className={`text-sm font-bold font-mono ${totalPnL >= 0 ? 'text-accent-green text-glow-green' : 'text-accent-red text-glow-red'}`}>
             {totalPnL >= 0 ? '+' : ''}{totalPnL.toFixed(2)} USD
           </span>
-          <button onClick={() => void refresh()} className="text-muted hover:text-white p-0.5 rounded transition-colors" title="Refresh">
+          <button onClick={refresh} className="text-muted hover:text-white p-0.5 rounded transition-colors" title="Refresh">
             <RefreshCw size={12} />
           </button>
         </div>

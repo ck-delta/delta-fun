@@ -1,15 +1,16 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { TradingProvider, useTradingContext } from './context/TradingContext';
 import { COINS, COIN_KEYS } from './lib/coins';
-import { api } from './lib/api';
 import ChartPanel from './components/ChartPanel';
 import PromptInput from './components/PromptInput';
 import SignalDisplay from './components/SignalDisplay';
 import OrderForm from './components/OrderForm';
 import TradeHistory from './components/TradeHistory';
 import LoadingScreen from './components/LoadingScreen';
+import ProfitPopup from './components/ProfitPopup';
+import SwipePanels from './components/SwipePanels';
 import { useOvershoot } from './hooks/useOvershoot';
-import { CheckCircle, XCircle, ChevronUp, ChevronDown, ArrowLeft, Sparkles, ShoppingCart } from 'lucide-react';
+import { CheckCircle, XCircle, ChevronUp, ChevronDown, Sparkles, ShoppingCart } from 'lucide-react';
 import type { CoinKey } from './lib/coins';
 
 function Toast() {
@@ -42,64 +43,11 @@ function OvershootStatusDot() {
   );
 }
 
-function useLivePriceWithChange(coinId: string) {
-  const [price, setPrice] = useState<number | null>(null);
-  const [change24h, setChange24h] = useState<number | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const update = async () => {
-      try {
-        const data = await api.getPriceWithChange(coinId);
-        if (!cancelled) {
-          setPrice(data.price);
-          setChange24h(data.change24h);
-        }
-      } catch { /* silent */ }
-    };
-    update();
-    const t = setInterval(update, 30000);
-    return () => { cancelled = true; clearInterval(t); };
-  }, [coinId]);
-
-  return { price, change24h };
-}
-
-function SwipeHint() {
-  const [show, setShow] = useState(false);
-  const HINT_KEY = 'swipeHinted_v2';
-
-  useEffect(() => {
-    if (localStorage.getItem(HINT_KEY)) return;
-    const timer = setTimeout(() => setShow(true), 800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!show) return null;
-
-  return (
-    <div
-      className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center"
-      onAnimationEnd={() => {
-        localStorage.setItem(HINT_KEY, 'true');
-        setShow(false);
-      }}
-    >
-      <div className="swipe-hint-anim flex items-center gap-2 bg-accent-green/10 backdrop-blur-md px-5 py-3 rounded-inner border border-accent-green/30 shadow-xl">
-        <ArrowLeft size={18} className="text-accent-green" />
-        <span className="text-xs text-white font-heading font-semibold">Swipe left for Paper Trade</span>
-      </div>
-    </div>
-  );
-}
-
 function AppInner() {
-  const { setStartVision, chartFocusMode, selectedCoin, setSelectedCoin, tradesVersion } = useTradingContext();
+  const { setStartVision, chartFocusMode, selectedCoin, setSelectedCoin, tradesVersion, livePrice } = useTradingContext();
   const coin = COINS[selectedCoin];
   const { startVision } = useOvershoot();
-  const { price, change24h } = useLivePriceWithChange(coin.id);
 
-  const snapRef = useRef<HTMLDivElement>(null);
   const [activePanel, setActivePanel] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -120,21 +68,6 @@ function AppInner() {
   // Register startVision into context once
   useEffect(() => { setStartVision(startVision); }, [startVision, setStartVision]);
 
-  const handleSnap = useCallback(() => {
-    const el = snapRef.current;
-    if (!el) return;
-    requestAnimationFrame(() => {
-      const idx = Math.round(el.scrollLeft / el.offsetWidth);
-      setActivePanel(idx);
-    });
-  }, []);
-
-  const scrollToPanel = (idx: number) => {
-    const el = snapRef.current;
-    if (!el) return;
-    el.scrollTo({ left: idx * el.offsetWidth, behavior: 'smooth' });
-  };
-
   const TAB_LABELS = [
     { label: 'AI Analysis', icon: <Sparkles size={11} /> },
     { label: 'Paper Trade', icon: <ShoppingCart size={11} /> },
@@ -143,19 +76,19 @@ function AppInner() {
   return (
     <div className="h-screen w-screen bg-body flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-3 md:px-5 py-2 bg-paper border-b border-border-subtle flex-shrink-0">
+      <div className="flex items-center justify-between px-3 md:px-5 py-2 bg-paper border-b border-border-subtle flex-shrink-0" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}>
         {/* Left: Logo + coin pills */}
         <div className="flex items-center gap-2 min-w-0">
           <img src="/favicon.svg" alt="Stocky Fun" className="w-6 h-6 flex-shrink-0" />
           <span className="text-white font-heading font-bold text-sm tracking-tight hidden sm:inline">Stocky Fun</span>
 
-          {/* Coin pills — mobile: in top bar, desktop: hidden (shown in ChartPanel toolbar) */}
+          {/* Coin pills — mobile: in top bar, desktop: hidden */}
           <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide lg:hidden">
             {COIN_KEYS.filter(c => c !== 'HYPE').map(c => (
               <button
                 key={c}
                 onClick={() => { if (c !== selectedCoin) setSelectedCoin(c); }}
-                className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-heading transition-all border ${
+                className={`px-2.5 py-1 min-h-[44px] flex items-center rounded-full text-[10px] font-bold font-heading transition-all border ${
                   c === selectedCoin
                     ? 'bg-accent-green/10 text-accent-green border-accent-green/30'
                     : 'text-muted hover:text-white border-transparent'
@@ -170,21 +103,14 @@ function AppInner() {
           <span className="text-muted text-[11px] font-mono hidden lg:inline">{coin.symbol}/USD · Paper</span>
         </div>
 
-        {/* Right: Price + change + status */}
+        {/* Right: Price + status */}
         <div className="flex items-center gap-2 sm:gap-3 text-[11px] text-muted font-heading flex-shrink-0">
-          {/* Live price + 24h change — mobile */}
+          {/* Live price — mobile */}
           <div className="flex items-center gap-1.5 lg:hidden">
-            {price !== null && (
-              <>
-                <span className="font-mono font-semibold text-white text-[11px]">
-                  ${price.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                </span>
-                {change24h !== null && (
-                  <span className={`font-mono text-[10px] font-semibold ${change24h >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
-                    {change24h >= 0 ? '▲' : '▼'}{Math.abs(change24h).toFixed(2)}%
-                  </span>
-                )}
-              </>
+            {livePrice !== null && (
+              <span className="font-mono font-semibold text-white text-[11px]">
+                ${livePrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </span>
             )}
           </div>
 
@@ -206,7 +132,7 @@ function AppInner() {
           <ChartPanel />
         </div>
 
-        {/* Mobile: swipeable panels */}
+        {/* Mobile: Framer Motion swipeable panels */}
         <div className={`flex flex-col min-h-0 transition-all duration-300 lg:hidden ${
           chartFocusMode ? 'h-0 overflow-hidden' : 'flex-1'
         }`}>
@@ -215,8 +141,8 @@ function AppInner() {
             {TAB_LABELS.map((tab, i) => (
               <button
                 key={tab.label}
-                onClick={() => scrollToPanel(i)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-heading font-semibold uppercase tracking-wide transition-all border-b-2 ${
+                onClick={() => setActivePanel(i)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 min-h-[44px] text-[11px] font-heading font-semibold uppercase tracking-wide transition-all border-b-2 ${
                   activePanel === i
                     ? 'text-accent-green border-accent-green'
                     : 'text-muted border-transparent'
@@ -228,30 +154,26 @@ function AppInner() {
             ))}
           </div>
 
-          {/* Snap scroll container */}
-          <div className="relative flex-1 min-h-0">
-            <SwipeHint />
-            <div
-              ref={snapRef}
-              onScroll={handleSnap}
-              className="flex overflow-x-auto snap-container scrollbar-hide h-full"
-            >
-              {/* Panel 1: AI Analysis — answer on top, prompts below */}
-              <div className="min-w-full snap-child overflow-y-auto">
-                <SignalDisplay />
-                <PromptInput />
-              </div>
-              {/* Panel 2: Paper Trade */}
-              <div className="min-w-full snap-child overflow-y-auto">
-                <OrderForm />
-              </div>
-            </div>
+          {/* Swipeable panels */}
+          <div className="flex-1 min-h-0">
+            <SwipePanels
+              panels={[
+                <>
+                  <SignalDisplay />
+                  <PromptInput />
+                </>,
+                <OrderForm />,
+              ]}
+              activePanel={activePanel}
+              onPanelChange={setActivePanel}
+            />
           </div>
 
           {/* Collapsible Trade History toggle */}
           <button
             onClick={() => setShowHistory(v => !v)}
-            className="flex items-center justify-center gap-2 py-2 bg-paper border-t border-border-subtle text-[11px] text-muted font-heading uppercase tracking-wide hover:text-white transition-colors flex-shrink-0"
+            className="flex items-center justify-center gap-2 py-2.5 min-h-[44px] bg-paper border-t border-border-subtle text-[11px] text-muted font-heading uppercase tracking-wide hover:text-white transition-colors flex-shrink-0"
+            style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}
           >
             {showHistory ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
             Trade History{tradeCount > 0 ? ` (${tradeCount})` : ''}
@@ -276,6 +198,7 @@ function AppInner() {
       </div>
 
       <Toast />
+      <ProfitPopup />
     </div>
   );
 }

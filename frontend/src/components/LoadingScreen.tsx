@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fireCompletionConfetti } from '../hooks/useDopamine';
 
 const LOG_MESSAGES = [
   'LOADING MARKET DATA...',
@@ -47,9 +48,10 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
     return () => clearInterval(interval);
   }, []);
 
-  // Fade out when done
+  // Fade out when done + confetti
   useEffect(() => {
     if (displayed >= 100) {
+      fireCompletionConfetti();
       const t = setTimeout(() => setFading(true), 400);
       const t2 = setTimeout(onComplete, 1100);
       return () => { clearTimeout(t); clearTimeout(t2); };

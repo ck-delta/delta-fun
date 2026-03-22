@@ -1,7 +1,15 @@
-import { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Eye, Zap, AlertTriangle, Clock } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  TrendingUp, TrendingDown, ChevronDown, ChevronUp, Eye, Zap, AlertTriangle,
+  Clock, ShieldCheck, Shield, ShieldAlert, Scale, Brain, Activity, BarChart3, Layers, Target,
+} from 'lucide-react';
 import { useTradingContext } from '../context/TradingContext';
 import { COINS } from '../lib/coins';
+import { api } from '../lib/api';
+import type { ConfidenceBreakdown } from '../lib/api';
+import { fireBuyConfetti } from '../hooks/useDopamine';
+
+/* ── helpers ── */
 
 function ConfidenceBar({ value }: { value: number }) {
   const pct = Math.round(value * 100);
@@ -21,10 +29,7 @@ function ConfidenceBar({ value }: { value: number }) {
         <span className={`text-[11px] font-semibold font-mono ${labelColor}`}>{label} · {pct}%</span>
       </div>
       <div className="h-2 bg-border-strong rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-700 ${color}`}
-          style={{ width: `${pct}%` }}
-        />
+        <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${pct}%` }} />
       </div>
       <p className="text-[10px] text-muted font-heading">{explanation}</p>
     </div>
@@ -53,10 +58,86 @@ function TimeAgo({ timestamp }: { timestamp: number }) {
   );
 }
 
+function ReliabilityBadge({ confidence, signalScore }: { confidence: number; signalScore: number }) {
+  const absScore = Math.abs(signalScore);
+  const isGreen = confidence >= 0.75 && absScore >= 4;
+  const isYellow = !isGreen && (confidence >= 0.60 || absScore >= 3);
+
+  if (isGreen) {
+    return (
+      <span className="flex items-center gap-1 text-[10px] text-accent-green font-heading">
+        <ShieldCheck size={11} />
+        Reliable
+      </span>
+    );
+  }
+  if (isYellow) {
+    return (
+      <span className="flex items-center gap-1 text-[10px] text-accent-amber font-heading">
+        <Shield size={11} />
+        Moderate
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1 text-[10px] text-accent-red font-heading">
+      <ShieldAlert size={11} />
+      Low
+    </span>
+  );
+}
+
+const BREAKDOWN_ICONS: Record<keyof ConfidenceBreakdown, typeof TrendingUp> = {
+  trend: TrendingUp,
+  momentum: Activity,
+  volatility: BarChart3,
+  structure: Layers,
+  confluence: Target,
+};
+
+const BREAKDOWN_LABELS: Record<keyof ConfidenceBreakdown, string> = {
+  trend: 'Trend',
+  momentum: 'Momentum',
+  volatility: 'Volatility',
+  structure: 'Structure',
+  confluence: 'Confluence',
+};
+
+/* ── main component ── */
+
 export default function SignalDisplay() {
-  const { lastSignal, isAnalyzing, lastOvershootSnapshot, analysisTimestamp, selectedCoin } = useTradingContext();
+  const {
+    lastSignal, isAnalyzing, lastOvershootSnapshot, analysisTimestamp, selectedCoin,
+    critiqueResult, setCritiqueResult, isCritiquing, setIsCritiquing, showToast,
+  } = useTradingContext();
   const [showOvershoot, setShowOvershoot] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
   const coin = COINS[selectedCoin];
+  const prevSignalRef = useRef(lastSignal);
+
+  // Fire confetti on strong buy signal
+  useEffect(() => {
+    if (lastSignal && lastSignal !== prevSignalRef.current) {
+      if (lastSignal.signal === 'buy' && lastSignal.confidence > 0.75) {
+        fireBuyConfetti();
+      }
+      prevSignalRef.current = lastSignal;
+    }
+  }, [lastSignal]);
+
+  const handleCritique = useCallback(async () => {
+    if (!lastSignal || isCritiquing) return;
+    setIsCritiquing(true);
+    setCritiqueResult(null);
+    try {
+      const result = await api.critique(lastSignal, coin.symbol);
+      setCritiqueResult(result);
+    } catch (err) {
+      showToast(`Critique failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
+    } finally {
+      setIsCritiquing(false);
+    }
+  }, [lastSignal, isCritiquing, coin.symbol, setIsCritiquing, setCritiqueResult, showToast]);
 
   if (isAnalyzing) {
     return (
@@ -104,11 +185,12 @@ export default function SignalDisplay() {
 
   const borderColor = isUp ? 'border-accent-green/40' : 'border-accent-red/40';
   const modelName = lastSignal.modelUsed?.replace(/-versatile|-instant/g, '') ?? 'groq';
+  const breakdown = lastSignal.confidenceBreakdown;
 
   return (
     <div className="p-4 border-b border-border-subtle">
       <div className={`bg-surface rounded-inner p-4 border ${borderColor} animate-fade-in`}>
-        {/* Top row: prediction + signal — BIGGER */}
+        {/* Top row: prediction + signal */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className={`w-14 h-14 rounded-lg flex items-center justify-center ${isUp ? 'bg-accent-green/10' : 'bg-accent-red/10'}`}>
@@ -136,13 +218,54 @@ export default function SignalDisplay() {
           <ConfidenceBar value={lastSignal.confidence} />
         </div>
 
-        {/* Metadata row: model + timestamp */}
+        {/* Metadata row: model + reliability + timestamp */}
         <div className="flex items-center justify-between mb-3 px-1">
-          <span className="text-[10px] text-muted font-mono">
-            Model: {modelName}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-muted font-mono">{modelName}</span>
+            <ReliabilityBadge confidence={lastSignal.confidence} signalScore={lastSignal.ta.signalScore} />
+          </div>
           {analysisTimestamp && <TimeAgo timestamp={analysisTimestamp} />}
         </div>
+
+        {/* AI Reasoning breakdown (collapsible) */}
+        {breakdown && (
+          <div className="mb-3">
+            <button
+              onClick={() => setShowBreakdown(v => !v)}
+              className="flex items-center gap-1.5 text-[11px] text-muted hover:text-white transition-colors font-heading mb-1"
+            >
+              <Brain size={12} />
+              {showBreakdown ? 'Hide' : 'Show'} AI Reasoning
+              {showBreakdown ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            </button>
+            {showBreakdown && (
+              <div className="space-y-1.5 mt-2 p-3 bg-body rounded-lg border border-border-subtle">
+                {(Object.keys(BREAKDOWN_LABELS) as (keyof ConfidenceBreakdown)[]).map(key => {
+                  const Icon = BREAKDOWN_ICONS[key];
+                  const text = breakdown[key];
+                  if (!text) return null;
+                  return (
+                    <div key={key} className="flex items-start gap-2">
+                      <Icon size={12} className="text-muted flex-shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-[10px] text-muted font-heading uppercase tracking-wide">{BREAKDOWN_LABELS[key]}</span>
+                        <p className="text-[11px] text-white/80 leading-relaxed">{text}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+                {lastSignal.thinking && (
+                  <details className="mt-2 border-t border-border-subtle pt-2">
+                    <summary className="text-[10px] text-muted font-heading cursor-pointer hover:text-white transition-colors">
+                      Raw Chain-of-Thought
+                    </summary>
+                    <p className="mt-1 text-[10px] text-muted/70 leading-relaxed font-mono whitespace-pre-wrap">{lastSignal.thinking}</p>
+                  </details>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Signal score */}
         <div className="flex items-center gap-2 mb-3">
@@ -228,6 +351,75 @@ export default function SignalDisplay() {
             <p className="text-[11px] text-accent-amber/80 leading-relaxed">{lastSignal.risk}</p>
           </div>
         )}
+
+        {/* Second Opinion button + critique panel */}
+        <div className="mt-3 border-t border-border-subtle pt-3">
+          <button
+            onClick={handleCritique}
+            disabled={isCritiquing}
+            className={`flex items-center gap-1.5 text-[11px] font-heading px-3 py-1.5 rounded-inner border transition-all ${
+              isCritiquing
+                ? 'border-border-subtle text-muted cursor-wait animate-pulse'
+                : critiqueResult
+                  ? 'border-border-subtle text-muted hover:text-white hover:border-border-strong'
+                  : 'border-accent-blue/30 text-accent-blue hover:bg-accent-blue/10'
+            }`}
+          >
+            <Scale size={12} />
+            {isCritiquing ? 'Getting second opinion...' : critiqueResult ? 'Refresh Second Opinion' : 'Get Second Opinion'}
+          </button>
+
+          {critiqueResult && (
+            <div className="mt-3 p-3 bg-body rounded-lg border border-border-subtle space-y-2">
+              {/* Verdict badge */}
+              <div className="flex items-center justify-between">
+                <span className={`text-[11px] font-bold font-heading px-2.5 py-1 rounded-full border uppercase tracking-wide ${
+                  critiqueResult.verdict === 'agree'
+                    ? 'text-accent-green bg-accent-green/10 border-accent-green/30'
+                    : critiqueResult.verdict === 'disagree'
+                      ? 'text-accent-red bg-accent-red/10 border-accent-red/30'
+                      : 'text-accent-amber bg-accent-amber/10 border-accent-amber/30'
+                }`}>
+                  {critiqueResult.verdict === 'agree' ? 'Agrees' : critiqueResult.verdict === 'disagree' ? 'Disagrees' : 'Partially Agrees'}
+                </span>
+                <span className="text-[10px] text-muted font-mono">
+                  Adjusted: {Math.round(critiqueResult.adjustedConfidence * 100)}% vs {Math.round(lastSignal.confidence * 100)}%
+                </span>
+              </div>
+
+              {/* Flaws */}
+              {critiqueResult.flaws.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-muted font-heading uppercase tracking-wide mb-1">Flaws Found</p>
+                  <ul className="space-y-0.5">
+                    {critiqueResult.flaws.map((flaw, i) => (
+                      <li key={i} className="text-[11px] text-accent-red/80 leading-relaxed flex items-start gap-1.5">
+                        <span className="text-accent-red mt-0.5">•</span>
+                        {flaw}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Overlooked */}
+              {critiqueResult.overlooked && (
+                <div>
+                  <p className="text-[10px] text-muted font-heading uppercase tracking-wide mb-1">Overlooked</p>
+                  <p className="text-[11px] text-white/70 leading-relaxed">{critiqueResult.overlooked}</p>
+                </div>
+              )}
+
+              {/* Alternative view */}
+              {critiqueResult.alternativeView && (
+                <div>
+                  <p className="text-[10px] text-muted font-heading uppercase tracking-wide mb-1">Alternative View</p>
+                  <p className="text-[11px] text-white/70 leading-relaxed">{critiqueResult.alternativeView}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Overshoot visual notes */}
         {lastOvershootSnapshot && (

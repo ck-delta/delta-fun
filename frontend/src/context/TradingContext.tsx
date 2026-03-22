@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
-import type { AnalysisResponse } from '../lib/api';
+import type { AnalysisResponse, CritiqueResponse } from '../lib/api';
 import type { CoinKey } from '../lib/coins';
 
 interface TradingContextValue {
@@ -25,6 +25,10 @@ interface TradingContextValue {
   setSelectedCoin: (coin: CoinKey) => void;
   livePrice: number | null;
   setLivePrice: (p: number | null) => void;
+  critiqueResult: CritiqueResponse | null;
+  setCritiqueResult: (v: CritiqueResponse | null) => void;
+  isCritiquing: boolean;
+  setIsCritiquing: (v: boolean) => void;
 }
 
 const TradingContext = createContext<TradingContextValue | null>(null);
@@ -44,6 +48,8 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const [chartFocusMode, setChartFocusMode] = useState(false);
   const [selectedCoin, setSelectedCoin] = useState<CoinKey>('BTC');
   const [livePrice, setLivePrice] = useState<number | null>(null);
+  const [critiqueResult, setCritiqueResult] = useState<CritiqueResponse | null>(null);
+  const [isCritiquing, setIsCritiquing] = useState(false);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -64,6 +70,8 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       chartFocusMode, setChartFocusMode,
       selectedCoin, setSelectedCoin,
       livePrice, setLivePrice,
+      critiqueResult, setCritiqueResult,
+      isCritiquing, setIsCritiquing,
     }}>
       {children}
     </TradingContext.Provider>
