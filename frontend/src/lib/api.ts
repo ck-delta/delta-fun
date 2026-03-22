@@ -1,5 +1,21 @@
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
+export interface ConfidenceBreakdown {
+  trend: string;
+  momentum: string;
+  volatility: string;
+  structure: string;
+  confluence: string;
+}
+
+export interface CritiqueResponse {
+  flaws: string[];
+  overlooked: string;
+  alternativeView: string;
+  adjustedConfidence: number;
+  verdict: 'agree' | 'disagree' | 'partially_agree';
+}
+
 export interface AnalysisResponse {
   prediction: 'up' | 'down';
   confidence: number;
@@ -8,6 +24,8 @@ export interface AnalysisResponse {
   keyLevels?: string;
   action?: string;
   risk?: string;
+  thinking?: string;
+  confidenceBreakdown?: ConfidenceBreakdown;
   modelUsed?: string;
   ta: {
     currentPrice: number;
@@ -78,6 +96,19 @@ export const api = {
     }
     const data = await res.json() as { price: number };
     return data.price;
+  },
+
+  async critique(analysis: AnalysisResponse, coinSymbol = 'BTC'): Promise<CritiqueResponse> {
+    const res = await fetch(`${API_URL}/api/analyze/critique`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ analysis, ta: analysis.ta, coinSymbol }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as { error?: string; detail?: string };
+      throw new Error(err.detail ?? err.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
   },
 
   async getPriceWithChange(coinId = 'bitcoin'): Promise<{ price: number; change24h: number | null }> {

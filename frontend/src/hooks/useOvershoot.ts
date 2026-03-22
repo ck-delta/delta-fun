@@ -39,12 +39,13 @@ export function useOvershoot() {
         apiKey: OVERSHOOT_API_KEY,
         source: { type: 'screen' },
         model: 'Qwen/Qwen2.5-VL-72B-Instruct',
-        prompt: `Analyze this BTC/USD candlestick chart. Identify:
-1. Current trend direction (bullish/bearish/sideways)
-2. Key support and resistance price levels visible
-3. Any significant candlestick patterns (doji, hammer, engulfing, etc.)
-4. Whether price appears extended or range-bound
-Respond in 2-3 sentences focusing on actionable insights.`,
+        prompt: `Analyze this crypto candlestick chart with precision. Provide:
+1. PRICE LEVELS: List exact support and resistance levels visible on the chart (e.g. "$84,200 support", "$89,500 resistance")
+2. PATTERN: Name any chart pattern visible (head & shoulders, double top/bottom, triangle, wedge, channel, flag). Rate pattern strength 1-10.
+3. TREND: Identify trend direction — is price making higher highs/higher lows (uptrend) or lower highs/lower lows (downtrend)?
+4. VOLUME: If volume bars are visible, note whether volume confirms or diverges from price action.
+5. CONFLUENCE: Rate 1-10 how strongly the visual chart supports a bullish vs bearish thesis.
+Format: "Levels: [prices] | Pattern: [name] ([strength]/10) | Trend: [direction] | Volume: [observation] | Confluence: [score]/10 [direction]"`,
         onResult: (result: { result?: string; success?: boolean }) => {
           restoreGetDisplayMedia();
           if (result.success && result.result) {
