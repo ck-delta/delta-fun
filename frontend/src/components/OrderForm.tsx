@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { api } from '../lib/api';
 import { addTrade } from '../lib/tradesStore';
 import { useTradingContext } from '../context/TradingContext';
@@ -55,37 +55,29 @@ export default function OrderForm() {
     : null;
 
   return (
-    <div className="p-4 pb-8 border-b border-border-subtle">
-      <div className="flex items-center gap-2 mb-3">
-        <ShoppingCart size={14} className="text-accent-blue" />
-        <span className="section-label text-white">Paper Trade</span>
-        {lastSignal && (
-          <span className="ml-auto text-[10px] text-muted font-heading">Signal auto-set</span>
-        )}
-      </div>
-
+    <div className="p-3 pb-6 border-b border-border-subtle">
       {/* Buy / Sell toggle */}
-      <div className="flex rounded-full bg-body p-1 border border-border-subtle mb-3">
+      <div className="flex rounded-full bg-body p-0.5 border border-border-subtle mb-2">
         <button
           onClick={() => setSide('buy')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-bold font-heading rounded-full transition-all active:scale-95 ${
+          className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold font-heading rounded-full transition-all active:scale-95 ${
             side === 'buy' ? 'bg-accent-green text-black shadow-glow-green' : 'text-muted hover:text-white'
           }`}
         >
-          <TrendingUp size={14} /> BUY
+          <TrendingUp size={12} /> BUY
         </button>
         <button
           onClick={() => setSide('sell')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-bold font-heading rounded-full transition-all active:scale-95 ${
+          className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold font-heading rounded-full transition-all active:scale-95 ${
             side === 'sell' ? 'bg-accent-red text-white shadow-glow-red' : 'text-muted hover:text-white'
           }`}
         >
-          <TrendingDown size={14} /> SELL
+          <TrendingDown size={12} /> SELL
         </button>
       </div>
 
       {/* Fields */}
-      <div className="space-y-2 mb-3">
+      <div className="space-y-1.5 mb-2">
         <div className="hidden lg:block">
           <label className="text-xs text-muted block mb-1 font-heading tracking-wide uppercase">Symbol</label>
           <div className="bg-body border border-border-subtle rounded-inner px-4 py-2.5 text-sm text-muted font-mono">
@@ -142,7 +134,7 @@ export default function OrderForm() {
       <button
         onClick={handlePlace}
         disabled={placing}
-        className={`w-full py-3.5 rounded-inner text-sm font-bold font-heading uppercase tracking-wider transition-all active:scale-95 ${
+        className={`w-full py-2.5 rounded-inner text-sm font-bold font-heading uppercase tracking-wider transition-all active:scale-95 ${
           side === 'buy'
             ? 'bg-accent-green hover:bg-accent-green/90 text-black shadow-glow-green hover:shadow-glow-green-strong'
             : 'bg-accent-red hover:bg-accent-red/90 text-white shadow-glow-red'
