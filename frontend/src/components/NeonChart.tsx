@@ -82,11 +82,13 @@ export default function NeonChart({ coin, interval, onPriceUpdate }: NeonChartPr
     };
   }, [interval]);
 
-  // Update data when candles change
+  // Update data when candles change + auto-scroll to latest
   useEffect(() => {
-    if (!seriesRef.current || candles.length === 0) return;
+    if (!seriesRef.current || !chartRef.current || candles.length === 0) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     seriesRef.current.setData(candles as any);
+    // Keep the latest candle visible (auto-scroll right)
+    chartRef.current.timeScale().scrollToRealTime();
   }, [candles]);
 
   return (

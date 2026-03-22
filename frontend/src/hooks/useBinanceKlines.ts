@@ -101,10 +101,12 @@ export function useBinanceKlines(coin: CoinConfig, interval: Interval) {
     const symbol = coin.binanceSymbol;
 
     // Fetch historical candles
+    // For 1s: Binance REST only has ~2min of 1s data, so fetch 1m history as context
     const fetchHistory = async () => {
       try {
-        const limit = interval === '1s' ? 120 : 300;
-        const res = await fetch(`${BINANCE_REST}?symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${limit}`);
+        const histInterval = interval === '1s' ? '1m' : interval;
+        const limit = interval === '1s' ? 60 : 300;
+        const res = await fetch(`${BINANCE_REST}?symbol=${symbol.toUpperCase()}&interval=${histInterval}&limit=${limit}`);
         if (!res.ok) throw new Error('REST failed');
         const data = await res.json();
         if (cancelled) return;
