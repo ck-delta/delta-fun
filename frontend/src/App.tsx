@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { TradingProvider, useTradingContext } from './context/TradingContext';
 import { COINS, COIN_KEYS } from './lib/coins';
 import ChartPanel from './components/ChartPanel';
@@ -9,7 +9,10 @@ import TradeHistory from './components/TradeHistory';
 import LoadingScreen from './components/LoadingScreen';
 import ProfitPopup from './components/ProfitPopup';
 import SwipePanels from './components/SwipePanels';
+import SwipeHint, { shouldShowSwipeHint, markSwipeHintSeen } from './components/SwipeHint';
+import InstallPrompt from './components/InstallPrompt';
 import { useOvershoot } from './hooks/useOvershoot';
+import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { CheckCircle, XCircle, ChevronUp, ChevronDown, Sparkles, ShoppingCart } from 'lucide-react';
 import type { CoinKey } from './lib/coins';
 
@@ -50,6 +53,19 @@ function AppInner() {
 
   const [activePanel, setActivePanel] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(shouldShowSwipeHint);
+  const install = useInstallPrompt();
+
+  const handleSwipeComplete = useCallback(() => {
+    if (showSwipeHint) {
+      setShowSwipeHint(false);
+      markSwipeHintSeen();
+    }
+  }, [showSwipeHint]);
+
+  const handlePanelChange = useCallback((idx: number) => {
+    setActivePanel(idx);
+  }, []);
 
   // Count open trades for the toggle label
   const [tradeCount, setTradeCount] = useState(0);
@@ -155,7 +171,7 @@ function AppInner() {
           </div>
 
           {/* Swipeable panels */}
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 relative">
             <SwipePanels
               panels={[
                 <>
@@ -165,7 +181,12 @@ function AppInner() {
                 <OrderForm />,
               ]}
               activePanel={activePanel}
-              onPanelChange={setActivePanel}
+              onPanelChange={handlePanelChange}
+              onSwipeComplete={handleSwipeComplete}
+            />
+            <SwipeHint
+              visible={showSwipeHint}
+              onDismiss={() => { setShowSwipeHint(false); markSwipeHintSeen(); }}
             />
           </div>
 
@@ -199,6 +220,13 @@ function AppInner() {
 
       <Toast />
       <ProfitPopup />
+      <InstallPrompt
+        showPrompt={install.showPrompt}
+        canInstall={install.canInstall}
+        isIOS={install.isIOS}
+        onInstall={install.triggerInstall}
+        onDismiss={install.dismiss}
+      />
     </div>
   );
 }

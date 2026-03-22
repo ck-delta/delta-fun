@@ -5,9 +5,10 @@ interface SwipePanelsProps {
   panels: ReactNode[];
   activePanel: number;
   onPanelChange: (idx: number) => void;
+  onSwipeComplete?: () => void;
 }
 
-export default function SwipePanels({ panels, activePanel, onPanelChange }: SwipePanelsProps) {
+export default function SwipePanels({ panels, activePanel, onPanelChange, onSwipeComplete }: SwipePanelsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const x = useMotionValue(0);
@@ -46,6 +47,9 @@ export default function SwipePanels({ panels, activePanel, onPanelChange }: Swip
       newPanel = Math.max(activePanel - 1, 0);
     }
 
+    if (newPanel !== activePanel) {
+      onSwipeComplete?.();
+    }
     onPanelChange(newPanel);
   };
 
