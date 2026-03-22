@@ -76,7 +76,7 @@ function AppInner() {
   return (
     <div className="h-screen w-screen bg-body flex flex-col overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-3 md:px-5 py-2 bg-paper border-b border-border-subtle flex-shrink-0" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}>
+      <div className="flex items-center justify-between px-3 md:px-5 py-1.5 bg-paper border-b border-border-subtle flex-shrink-0" style={{ paddingTop: 'max(0.375rem, env(safe-area-inset-top))' }}>
         {/* Left: Logo + coin pills */}
         <div className="flex items-center gap-2 min-w-0">
           <img src="/favicon.svg" alt="Stocky Fun" className="w-6 h-6 flex-shrink-0" />
@@ -88,7 +88,7 @@ function AppInner() {
               <button
                 key={c}
                 onClick={() => { if (c !== selectedCoin) setSelectedCoin(c); }}
-                className={`px-2.5 py-1 min-h-[44px] flex items-center rounded-full text-[10px] font-bold font-heading transition-all border ${
+                className={`px-2 py-0.5 min-h-[32px] flex items-center rounded-full text-[10px] font-bold font-heading transition-all border ${
                   c === selectedCoin
                     ? 'bg-accent-green/10 text-accent-green border-accent-green/30'
                     : 'text-muted hover:text-white border-transparent'

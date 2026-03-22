@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
-import { Send, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAnalysis } from '../hooks/useAnalysis';
 import { useTradingContext } from '../context/TradingContext';
 
@@ -80,11 +80,6 @@ export default function PromptInput() {
 
   return (
     <div className="p-4 border-b border-border-subtle">
-      <div className="flex items-center gap-2 mb-3">
-        <Sparkles size={14} className="text-accent-purple" />
-        <span className="section-label text-white">AI Analysis</span>
-      </div>
-
       {/* Mobile: 5 default prompts as scrollable pills */}
       {!showAll && (
         <div className="lg:hidden mb-3">

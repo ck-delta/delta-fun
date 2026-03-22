@@ -161,14 +161,7 @@ export default function SignalDisplay() {
   }
 
   if (!lastSignal) {
-    return (
-      <div className="px-4 py-2.5 border-b border-border-subtle">
-        <div className="flex items-center gap-2.5 px-3 py-2 bg-surface rounded-inner border border-dashed border-border-strong">
-          <TrendingUp size={14} className="text-muted flex-shrink-0" />
-          <p className="text-muted text-xs font-heading">Enter a prompt above to get AI-powered {coin.symbol} analysis</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const isUp = lastSignal.prediction === 'up';

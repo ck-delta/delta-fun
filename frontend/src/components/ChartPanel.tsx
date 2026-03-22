@@ -221,12 +221,6 @@ export default function ChartPanel() {
         )}
       </div>
 
-      {/* Disclaimer */}
-      <div className="px-4 py-1.5 bg-paper border-t border-border-subtle">
-        <p className="text-muted-dim text-[10px] text-center font-heading tracking-wide">
-          Not financial advice · Paper trading only · Predictions are probabilistic
-        </p>
-      </div>
     </div>
   );
 }
