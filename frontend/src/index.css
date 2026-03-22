@@ -59,6 +59,34 @@ body::before {
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Scroll-snap for swipeable panels */
+.snap-container {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.snap-child {
+  scroll-snap-align: start;
+}
+
+/* Swipe hint animation */
+@keyframes swipe-hint {
+  0%   { opacity: 0; transform: translateX(0); }
+  15%  { opacity: 0.7; }
+  60%  { opacity: 0.7; transform: translateX(-60px); }
+  100% { opacity: 0; transform: translateX(-60px); }
+}
+.swipe-hint-anim {
+  animation: swipe-hint 2.5s ease-out forwards;
+}
+
+/* Crop GeckoTerminal iframe toolbar on mobile */
+@media (max-width: 1023px) {
+  .iframe-crop-mobile {
+    margin-top: -2.5rem;
+    height: calc(100% + 2.5rem) !important;
+  }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;

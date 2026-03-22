@@ -73,7 +73,7 @@ export default function OrderForm() {
     : null;
 
   return (
-    <div className="p-4 border-b border-border-subtle">
+    <div className="p-4 pb-8 border-b border-border-subtle">
       <div className="flex items-center gap-2 mb-3">
         <ShoppingCart size={14} className="text-accent-blue" />
         <span className="section-label text-white">Paper Trade</span>
@@ -104,7 +104,7 @@ export default function OrderForm() {
 
       {/* Fields */}
       <div className="space-y-2 mb-3">
-        <div>
+        <div className="hidden lg:block">
           <label className="text-xs text-muted block mb-1 font-heading tracking-wide uppercase">Symbol</label>
           <div className="bg-body border border-border-subtle rounded-inner px-4 py-2.5 text-sm text-muted font-mono">
             {coin.symbol} / USD (Paper)
@@ -126,7 +126,7 @@ export default function OrderForm() {
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted font-heading font-bold pointer-events-none">{coin.symbol}</span>
             </div>
           </div>
-          <div>
+          <div className="hidden lg:block">
             <label className="text-xs text-muted block mb-1 font-heading tracking-wide uppercase">Stop Loss</label>
             <div className="relative">
               <input

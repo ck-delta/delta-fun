@@ -71,8 +71,8 @@ export default function ChartPanel() {
 
   return (
     <div className="relative h-full flex flex-col">
-      {/* Hero header row */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-border-subtle bg-paper flex-shrink-0">
+      {/* Hero header row — desktop only */}
+      <div className="hidden lg:flex items-center justify-between px-5 py-3 border-b border-border-subtle bg-paper flex-shrink-0">
         {/* Left: Coin name + subtitle */}
         <div className="flex flex-col gap-0.5">
           <span className="font-heading font-bold text-xl uppercase tracking-tight text-white leading-none">
@@ -103,8 +103,8 @@ export default function ChartPanel() {
         </div>
       </div>
 
-      {/* Toolbar row */}
-      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border-subtle bg-paper flex-shrink-0">
+      {/* Toolbar row — desktop only */}
+      <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 border-b border-border-subtle bg-paper flex-shrink-0">
         {/* Coin tabs */}
         <div className="flex items-center gap-0.5 flex-shrink-0 overflow-x-auto scrollbar-hide">
           {COIN_KEYS.map(c => (
@@ -165,8 +165,8 @@ export default function ChartPanel() {
         </div>
       </div>
 
-      {/* Chart */}
-      <div id="chart-container" className="relative flex-1">
+      {/* Chart — crop iframe toolbar on mobile */}
+      <div id="chart-container" className="relative flex-1 overflow-hidden">
         {!loaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-body z-10">
             <div className="flex flex-col items-center gap-3">
@@ -183,9 +183,36 @@ export default function ChartPanel() {
           frameBorder="0"
           allowFullScreen
           onLoad={() => setLoaded(true)}
-          className="w-full h-full"
+          className="w-full h-full iframe-crop-mobile"
           style={{ border: 'none' }}
         />
+
+        {/* Mobile chart controls overlay */}
+        <div className="absolute top-2 right-2 z-20 flex items-center gap-1 lg:hidden">
+          <div className="flex rounded-full overflow-hidden border border-border-subtle/50 text-[9px] font-heading backdrop-blur-sm bg-body/70">
+            {hasGecko && (
+              <button
+                onClick={() => switchSource('gecko')}
+                className={`px-2 py-1 transition-all ${chartSource === 'gecko' ? 'bg-accent-green/15 text-accent-green' : 'text-muted'}`}
+              >
+                G
+              </button>
+            )}
+            <button
+              onClick={() => switchSource('tradingview')}
+              className={`px-2 py-1 transition-all ${chartSource === 'tradingview' || !hasGecko ? 'bg-surface text-white' : 'text-muted'}`}
+            >
+              TV
+            </button>
+          </div>
+          <button
+            onClick={() => { setLoaded(false); setKey(k => k + 1); }}
+            className="text-muted hover:text-white transition-colors p-1.5 rounded backdrop-blur-sm bg-body/70 border border-border-subtle/50"
+            title="Refresh chart"
+          >
+            <RefreshCw size={11} />
+          </button>
+        </div>
 
         {/* Open positions overlay */}
         {loaded && openTrades.length > 0 && (
@@ -227,9 +254,9 @@ export default function ChartPanel() {
           </div>
         )}
 
-        {/* Vision banner */}
+        {/* Vision banner — desktop only */}
         {loaded && overshootStatus !== 'active' && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 animate-fade-in">
+          <div className="hidden lg:block absolute bottom-4 left-1/2 -translate-x-1/2 z-20 animate-fade-in">
             <button
               onClick={startVision}
               className={`flex items-center gap-2.5 px-4 py-2.5 rounded-inner text-sm font-medium font-heading shadow-xl backdrop-blur-sm transition-all border ${
@@ -250,9 +277,9 @@ export default function ChartPanel() {
           </div>
         )}
 
-        {/* Vision active indicator */}
+        {/* Vision active indicator — desktop only */}
         {overshootStatus === 'active' && (
-          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2 py-1 rounded-inner bg-accent-purple/10 border border-accent-purple/30 backdrop-blur-sm">
+          <div className="hidden lg:flex absolute top-3 right-3 z-20 items-center gap-1.5 px-2 py-1 rounded-inner bg-accent-purple/10 border border-accent-purple/30 backdrop-blur-sm">
             <Eye size={11} className="text-accent-purple animate-pulse" />
             <span className="text-[10px] text-accent-purple font-medium font-heading">Vision ON</span>
           </div>

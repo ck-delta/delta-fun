@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 const LOG_MESSAGES = [
   'LOADING MARKET DATA...',
@@ -19,37 +19,33 @@ const STEPS = [
 ];
 
 export default function LoadingScreen({ onComplete }: { onComplete: () => void }) {
-  const [progress, setProgress] = useState(0);
   const [displayed, setDisplayed] = useState(0);
   const [logIdx, setLogIdx] = useState(0);
   const [fading, setFading] = useState(false);
-  const rafRef = useRef<number>(0);
 
-  // Step through progress targets
+  // Drive counter via setInterval (immune to rAF throttling in background tabs)
   useEffect(() => {
-    const timers = STEPS.map((step, i) =>
-      setTimeout(() => {
-        setProgress(step.target);
-        if (i < LOG_MESSAGES.length) setLogIdx(i);
-      }, step.delay),
-    );
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
-  // Smooth counter interpolation
-  useEffect(() => {
-    let current = displayed;
-    const tick = () => {
-      current += (progress - current) * 0.08;
-      if (Math.abs(progress - current) < 0.5) current = progress;
-      setDisplayed(Math.round(current));
-      if (current < progress) {
-        rafRef.current = requestAnimationFrame(tick);
+    let tick = 0;
+    const interval = setInterval(() => {
+      const elapsed = tick * 50;
+      let target = 0;
+      let log = 0;
+      for (let i = 0; i < STEPS.length; i++) {
+        if (elapsed >= STEPS[i].delay) {
+          target = STEPS[i].target;
+          if (i < LOG_MESSAGES.length) log = i;
+        }
       }
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [progress]);
+      setLogIdx(log);
+      setDisplayed(prev => {
+        if (prev >= target) return target;
+        return Math.min(prev + 2, target);
+      });
+      tick++;
+      if (tick > 200) clearInterval(interval);
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fade out when done
   useEffect(() => {

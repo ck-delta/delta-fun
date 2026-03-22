@@ -5,7 +5,6 @@ import type { CoinKey } from '../lib/coins';
 interface TradingContextValue {
   lastSignal: AnalysisResponse | null;
   setLastSignal: (s: AnalysisResponse | null) => void;
-  // tradesVersion increments whenever localStorage trades change — triggers re-renders in consumers
   tradesVersion: number;
   bumpTradesVersion: () => void;
   isAnalyzing: boolean;
@@ -24,6 +23,8 @@ interface TradingContextValue {
   setChartFocusMode: (v: boolean) => void;
   selectedCoin: CoinKey;
   setSelectedCoin: (coin: CoinKey) => void;
+  livePrice: number | null;
+  setLivePrice: (p: number | null) => void;
 }
 
 const TradingContext = createContext<TradingContextValue | null>(null);
@@ -42,6 +43,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [chartFocusMode, setChartFocusMode] = useState(false);
   const [selectedCoin, setSelectedCoin] = useState<CoinKey>('BTC');
+  const [livePrice, setLivePrice] = useState<number | null>(null);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -61,6 +63,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       toast, showToast,
       chartFocusMode, setChartFocusMode,
       selectedCoin, setSelectedCoin,
+      livePrice, setLivePrice,
     }}>
       {children}
     </TradingContext.Provider>

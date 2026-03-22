@@ -79,4 +79,20 @@ export const api = {
     const data = await res.json() as { price: number };
     return data.price;
   },
+
+  async getPriceWithChange(coinId = 'bitcoin'): Promise<{ price: number; change24h: number | null }> {
+    try {
+      const res = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(coinId)}&vs_currencies=usd&include_24hr_change=true`
+      );
+      if (!res.ok) throw new Error('CoinGecko failed');
+      const data = await res.json();
+      const coin = data[coinId];
+      return { price: coin?.usd ?? 0, change24h: coin?.usd_24h_change ?? null };
+    } catch {
+      // Fallback to existing API (no change data)
+      const price = await api.getPrice(coinId);
+      return { price, change24h: null };
+    }
+  },
 };

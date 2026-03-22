@@ -1,7 +1,15 @@
 import { useState, type KeyboardEvent } from 'react';
-import { Send, Sparkles } from 'lucide-react';
+import { Send, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAnalysis } from '../hooks/useAnalysis';
 import { useTradingContext } from '../context/TradingContext';
+
+const DEFAULT_PROMPTS = [
+  'EMA 9 direction — bullish or bearish?',
+  'RSI signal — overbought, oversold, or neutral?',
+  'Is RSI confirming the current trend direction?',
+  'MACD histogram — is momentum accelerating or fading?',
+  'How close is price to key support or resistance?',
+];
 
 const PROMPT_CATEGORIES = [
   {
@@ -54,6 +62,7 @@ const PROMPT_CATEGORIES = [
 
 export default function PromptInput() {
   const [prompt, setPrompt] = useState('');
+  const [showAll, setShowAll] = useState(false);
   const { analyze } = useAnalysis();
   const { isAnalyzing } = useTradingContext();
 
@@ -76,26 +85,59 @@ export default function PromptInput() {
         <span className="section-label text-white">AI Analysis</span>
       </div>
 
-      {/* Categorized prompts */}
-      <div className="flex flex-col gap-1.5 mb-3">
-        {PROMPT_CATEGORIES.map(cat => (
-          <div key={cat.label} className="flex items-start gap-2">
-            <span className={`text-[11px] font-bold uppercase tracking-wide flex-shrink-0 w-[68px] pt-1 font-heading ${cat.color}`}>
-              {cat.label}
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {cat.prompts.map(p => (
-                <button
-                  key={p}
-                  onClick={() => setPrompt(p)}
-                  className="text-[11px] px-2.5 py-1 rounded-full bg-surface text-muted hover:bg-surface-hover hover:text-white hover:border-accent-green/30 transition-all border border-border-subtle leading-snug"
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+      {/* Mobile: 5 default prompts as scrollable pills */}
+      {!showAll && (
+        <div className="lg:hidden mb-3">
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+            {DEFAULT_PROMPTS.map(p => (
+              <button
+                key={p}
+                onClick={() => setPrompt(p)}
+                className="text-[11px] px-2.5 py-1.5 rounded-full bg-surface text-muted hover:bg-surface-hover hover:text-white hover:border-accent-green/30 transition-all border border-border-subtle leading-snug whitespace-nowrap flex-shrink-0"
+              >
+                {p}
+              </button>
+            ))}
           </div>
-        ))}
+          <button
+            onClick={() => setShowAll(true)}
+            className="flex items-center gap-1 text-[10px] text-muted hover:text-white transition-colors mt-2 font-heading"
+          >
+            Show More <ChevronDown size={10} />
+          </button>
+        </div>
+      )}
+
+      {/* Mobile expanded / Desktop always: full categorized prompts */}
+      <div className={showAll ? 'mb-3' : 'hidden lg:block mb-3'}>
+        {showAll && (
+          <button
+            onClick={() => setShowAll(false)}
+            className="flex items-center gap-1 text-[10px] text-muted hover:text-white transition-colors mb-2 font-heading lg:hidden"
+          >
+            Show Less <ChevronUp size={10} />
+          </button>
+        )}
+        <div className="flex flex-col gap-1.5">
+          {PROMPT_CATEGORIES.map(cat => (
+            <div key={cat.label} className="flex items-start gap-2">
+              <span className={`text-[11px] font-bold uppercase tracking-wide flex-shrink-0 w-[68px] pt-1 font-heading ${cat.color}`}>
+                {cat.label}
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {cat.prompts.map(p => (
+                  <button
+                    key={p}
+                    onClick={() => { setPrompt(p); setShowAll(false); }}
+                    className="text-[11px] px-2.5 py-1 rounded-full bg-surface text-muted hover:bg-surface-hover hover:text-white hover:border-accent-green/30 transition-all border border-border-subtle leading-snug"
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="relative">
