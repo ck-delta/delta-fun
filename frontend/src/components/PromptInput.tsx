@@ -4,6 +4,7 @@ import { useAnalysis } from '../hooks/useAnalysis';
 import { useTradingContext } from '../context/TradingContext';
 
 const DEFAULT_PROMPTS = [
+  'Next 5 mins - up or down?',
   'EMA 9 direction — bullish or bearish?',
   'RSI signal — overbought, oversold, or neutral?',
   'Is RSI confirming the current trend direction?',
