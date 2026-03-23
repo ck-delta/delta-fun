@@ -213,10 +213,6 @@ function AppInner() {
               onPanelChange={handlePanelChange}
               onSwipeComplete={handleSwipeComplete}
             />
-            <SwipeHint
-              visible={showSwipeHint}
-              onDismiss={() => { setShowSwipeHint(false); markSwipeHintSeen(); }}
-            />
           </div>
 
           {/* Collapsible Trade History — hidden on Chat panel */}
@@ -259,6 +255,10 @@ function AppInner() {
 
       {/* Bottom navigation removed per user request */}
 
+      <SwipeHint
+        visible={showSwipeHint}
+        onDismiss={() => { setShowSwipeHint(false); markSwipeHintSeen(); }}
+      />
       <Toast />
       <ProfitPopup />
       <InstallPrompt
