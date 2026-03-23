@@ -1,32 +1,38 @@
-# Stocky Fun
+# Stocky Fun — AI-Powered Crypto Trading Dashboard
+# https://fun.stockyai.xyz
 
-> AI-powered crypto trading dashboard with real-time charts and paper trading.
+> Casino-style BTC trading PWA with AI signals, live charts, paper trading, and community chat.
 
 ## About
 
-Stocky Fun is a free, browser-based AI-powered cryptocurrency trading dashboard. It provides real-time price charts, AI-generated buy/sell signals, comprehensive technical analysis, and a paper trading simulator — all in one interface.
+Stocky Fun is a free, open-source Progressive Web App for real-time BTC/USD technical analysis. It uses Groq LLM (Llama 3.3 70B) to generate AI-powered buy/sell/hold signals from natural language prompts, combined with comprehensive technical indicators (RSI, MACD, Bollinger Bands, Stochastic, EMA, ATR).
 
 ## Features
 
-- **Real-time Charts**: Live crypto charts via GeckoTerminal and TradingView embeds
-- **AI Trading Signals**: Natural language prompts analyzed by Groq LLM to generate buy/sell/hold signals with confidence scores
-- **Technical Analysis**: RSI, MACD, Bollinger Bands, Stochastic Oscillator, EMA (9/21/200), ATR, Support/Resistance levels
-- **Paper Trading**: Simulated trading with real-time PnL tracking, stop loss support, and trade history
-- **Multi-Coin Support**: BTC, ETH, SOL, BNB, and HYPE
-- **Visual Chart Analysis**: AI-powered visual chart reading via Overshoot.ai screen sharing
-- **Signal Scoring**: Composite signal score (-10 to +10) combining multiple technical indicators
+- Real-time BTC/USD charts via TradingView and GeckoTerminal
+- AI trading signals from natural language prompts
+- Technical analysis: RSI, MACD, Bollinger Bands, Stochastic, EMA (9/21/200), ATR
+- Paper trading simulator with PnL tracking
+- Community chat
+- Mobile-first swipeable UI (PWA installable on iOS/Android)
+- Multi-coin: BTC, ETH, SOL, BNB
+
+## AI API
+
+POST https://fun.stockyai.xyz/api/analyze
+Body: { "prompt": "Should I buy BTC now?", "coin": "bitcoin" }
+Returns: prediction, confidence, signal, rationale, key levels, action, risk
+
+## More Info
+
+- Full LLM integration guide: https://fun.stockyai.xyz/llm.md
+- Project summary: https://fun.stockyai.xyz/summary.md
+- Source code: https://github.com/SirCharan/stocky-fun
 
 ## Tech Stack
 
-- Frontend: React 19, TypeScript, Tailwind CSS, Vite
-- AI: Groq LLM (Llama 3), Overshoot.ai for visual analysis
-- Data: CoinGecko API, GeckoTerminal, TradingView
-- Deployment: Vercel (serverless)
-
-## URL
-
-https://fun.stockyai.xyz
+React 19, TypeScript, Tailwind CSS, Vite, Framer Motion, Node.js, Express, Groq LLM, CoinGecko API, TradingView, Vercel serverless.
 
 ## Contact
 
-Visit https://fun.stockyai.xyz for the live application.
+https://x.com/yourasianquant
