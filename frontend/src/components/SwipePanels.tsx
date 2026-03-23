@@ -6,22 +6,28 @@ interface SwipePanelsProps {
   activePanel: number;
   onPanelChange: (idx: number) => void;
   onSwipeComplete?: () => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
-export default function SwipePanels({ panels, activePanel, onPanelChange, onSwipeComplete }: SwipePanelsProps) {
+export default function SwipePanels({ panels, activePanel, onPanelChange, onSwipeComplete, onDragStart: onDragStartProp, onDragEnd: onDragEndProp }: SwipePanelsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const x = useMotionValue(0);
 
-  // Track container width
+  // Track container width (debounced via rAF)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const update = () => setContainerWidth(el.offsetWidth);
+    let rafId = 0;
+    const update = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => setContainerWidth(el.offsetWidth));
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => { ro.disconnect(); cancelAnimationFrame(rafId); };
   }, []);
 
   // Sync x position when activePanel changes externally (e.g. tab click)
@@ -34,7 +40,12 @@ export default function SwipePanels({ panels, activePanel, onPanelChange, onSwip
     });
   }, [activePanel, containerWidth, x]);
 
+  const handleDragStart = () => {
+    onDragStartProp?.(); // CRITICAL IMPROVEMENT: Pause Lenis during swipe
+  };
+
   const handleDragEnd = (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
+    onDragEndProp?.(); // CRITICAL IMPROVEMENT: Resume Lenis after swipe
     if (containerWidth === 0) return;
     const threshold = containerWidth * 0.2;
     const velocity = info.velocity.x;
@@ -64,13 +75,14 @@ export default function SwipePanels({ panels, activePanel, onPanelChange, onSwip
           right: 0,
         }}
         dragElastic={0.15}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         dragMomentum={false}
       >
         {panels.map((panel, i) => (
           <div
             key={i}
-            className="h-full overflow-y-auto"
+            className="h-full overflow-y-auto overscroll-contain"
             style={{ width: containerWidth || '100%' }}
           >
             {panel}

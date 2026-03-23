@@ -87,6 +87,7 @@ export default defineConfig({
           'overshoot-deps': ['overshoot'],
           'chart-deps': ['lightweight-charts'],
           'motion-deps': ['framer-motion'],
+          'scroll-deps': ['lenis', '@tanstack/react-virtual'],
         },
       },
     },

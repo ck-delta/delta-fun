@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { TradingProvider, useTradingContext } from './context/TradingContext';
 import { COINS, COIN_KEYS } from './lib/coins';
 import ChartPanel from './components/ChartPanel';
@@ -14,6 +14,7 @@ import InstallPrompt from './components/InstallPrompt';
 import CommunityChat from './components/CommunityChat'; // NEW
 import { ChatProvider } from './context/ChatContext'; // NEW
 import { useOvershoot } from './hooks/useOvershoot';
+import { useLenis } from './hooks/useLenis';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { CheckCircle, XCircle, ChevronUp, ChevronDown, Sparkles, ShoppingCart, MessageCircle } from 'lucide-react';
 import type { CoinKey } from './lib/coins';
@@ -52,6 +53,10 @@ function AppInner() {
   const { setStartVision, chartFocusMode, selectedCoin, setSelectedCoin, tradesVersion, livePrice } = useTradingContext();
   const coin = COINS[selectedCoin];
   const { startVision } = useOvershoot();
+
+  // CRITICAL IMPROVEMENT: Lenis smooth scrolling for desktop trading panel
+  const desktopPanelRef = useRef<HTMLDivElement>(null);
+  const { pause: pauseLenis, resume: resumeLenis } = useLenis(desktopPanelRef);
 
   const [activePanel, setActivePanel] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
@@ -212,6 +217,8 @@ function AppInner() {
               activePanel={activePanel}
               onPanelChange={handlePanelChange}
               onSwipeComplete={handleSwipeComplete}
+              onDragStart={pauseLenis}
+              onDragEnd={resumeLenis}
             />
           </div>
 
@@ -240,7 +247,7 @@ function AppInner() {
           chartFocusMode ? 'lg:w-0 overflow-hidden' : 'lg:flex-none lg:w-[50%]'
         }`}>
           {/* Middle column: trading panels */}
-          <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto border-r border-border-subtle">
+          <div ref={desktopPanelRef} className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overscroll-contain border-r border-border-subtle">
             <PromptInput />
             <SignalDisplay />
             <OrderForm />

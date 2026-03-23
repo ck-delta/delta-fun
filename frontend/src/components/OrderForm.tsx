@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { api } from '../lib/api';
 import { addTrade } from '../lib/tradesStore';
 import { useTradingContext } from '../context/TradingContext';
+import { fireBuyConfetti } from '../hooks/useDopamine';
 import { COINS } from '../lib/coins';
 
 export default function OrderForm() {
@@ -12,6 +14,7 @@ export default function OrderForm() {
   const [quantity, setQuantity] = useState('0.001');
   const [stopLoss, setStopLoss] = useState('');
   const [placing, setPlacing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Auto-set side from signal
   useEffect(() => {
@@ -42,6 +45,10 @@ export default function OrderForm() {
       });
       bumpTradesVersion();
       showToast(`Paper ${side.toUpperCase()} placed at $${entryPrice.toLocaleString()}`, 'success');
+      // CRITICAL IMPROVEMENT: Trade success animation + confetti
+      fireBuyConfetti();
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 1500);
       setStopLoss('');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Order failed', 'error');
@@ -131,10 +138,14 @@ export default function OrderForm() {
         )}
       </div>
 
-      <button
+      {/* CRITICAL IMPROVEMENT: Trade success pop animation */}
+      <motion.button
         onClick={handlePlace}
         disabled={placing}
-        className={`w-full py-2.5 rounded-inner text-sm font-bold font-heading uppercase tracking-wider transition-all active:scale-95 ${
+        animate={showSuccess ? { scale: [1, 1.1, 1] } : {}}
+        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+        whileTap={{ scale: 0.95 }}
+        className={`w-full py-2.5 rounded-inner text-sm font-bold font-heading uppercase tracking-wider transition-colors ${
           side === 'buy'
             ? 'bg-accent-green hover:bg-accent-green/90 text-black shadow-glow-green hover:shadow-glow-green-strong'
             : 'bg-accent-red hover:bg-accent-red/90 text-white shadow-glow-red'
@@ -148,7 +159,7 @@ export default function OrderForm() {
         ) : (
           `Place Paper ${side.toUpperCase()}`
         )}
-      </button>
+      </motion.button>
     </div>
   );
 }

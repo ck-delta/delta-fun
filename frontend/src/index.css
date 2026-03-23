@@ -9,6 +9,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
 body {
   background-color: #050505;
   color: #ffffff;
@@ -95,4 +100,43 @@ input, select, textarea {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #444444;
+}
+
+/* Skeleton shimmer loader */
+.skeleton {
+  background: linear-gradient(90deg, #181818 25%, #222222 50%, #181818 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* Safe area utilities */
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+.safe-top {
+  padding-top: max(0.375rem, env(safe-area-inset-top));
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Pull-to-refresh spinner */
+@keyframes neon-spin {
+  to { transform: rotate(360deg); }
+}
+.neon-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid transparent;
+  border-top-color: #a855f7;
+  border-radius: 50%;
+  animation: neon-spin 0.8s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.5));
 }

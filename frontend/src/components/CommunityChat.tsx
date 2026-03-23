@@ -1,8 +1,10 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Send, X, Reply, Trophy, ChevronRight } from 'lucide-react';
 import { useChatContext } from '../context/ChatContext';
 import { useLongPress } from '../hooks/useLongPress';
+import { fireLevelUpConfetti } from '../hooks/useDopamine';
 import {
   type ChatMessage, type ReplyRef, type LeaderboardEntry,
   REACTION_EMOJIS, formatRelativeTime, getNextLevel,
@@ -95,10 +97,15 @@ function ReactionPicker({ onSelect, onClose }: { onSelect: (emoji: string) => vo
 }
 
 /* ═══════════════════════════════════════════
-   Message Bubble
+   Message Bubble (CRITICAL IMPROVEMENT: animation on entry)
    ═══════════════════════════════════════════ */
 
-function MessageBubble({ msg, onReply }: { msg: ChatMessage; onReply: (ref: ReplyRef) => void }) {
+const messageVariants = {
+  hidden: { opacity: 0, y: 12, scale: 0.97 },
+  visible: { opacity: 1, y: 0, scale: 1 },
+};
+
+function MessageBubble({ msg, onReply, isNew }: { msg: ChatMessage; onReply: (ref: ReplyRef) => void; isNew: boolean }) {
   const { addReaction } = useChatContext();
   const [showPicker, setShowPicker] = useState(false);
 
@@ -107,7 +114,7 @@ function MessageBubble({ msg, onReply }: { msg: ChatMessage; onReply: (ref: Repl
   const isUser = msg.isUser;
   const reactions = Object.entries(msg.reactions).filter(([, r]) => r.count > 0);
 
-  return (
+  const content = (
     <div className={`flex flex-col mb-2 px-3 ${isUser ? 'items-end' : 'items-start'}`}>
       {/* Username + time */}
       <div className={`flex items-center gap-1.5 mb-0.5 ${isUser ? 'flex-row-reverse' : ''}`}>
@@ -174,6 +181,22 @@ function MessageBubble({ msg, onReply }: { msg: ChatMessage; onReply: (ref: Repl
       )}
     </div>
   );
+
+  // CRITICAL IMPROVEMENT: Animate only new messages, not existing ones on mount
+  if (isNew) {
+    return (
+      <motion.div
+        variants={messageVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+      >
+        {content}
+      </motion.div>
+    );
+  }
+
+  return content;
 }
 
 /* ═══════════════════════════════════════════
@@ -183,7 +206,6 @@ function MessageBubble({ msg, onReply }: { msg: ChatMessage; onReply: (ref: Repl
 function LeaderboardView() {
   const { leaderboard, profile } = useChatContext();
 
-  // Insert user at correct position
   const userEntry: LeaderboardEntry = {
     username: profile.username,
     xp: profile.xp,
@@ -192,7 +214,6 @@ function LeaderboardView() {
   };
 
   const combined = [...leaderboard, userEntry].sort((a, b) => b.xp - a.xp).slice(0, 10);
-
   const rankEmojis = ['🥇', '🥈', '🥉'];
 
   return (
@@ -201,7 +222,7 @@ function LeaderboardView() {
         <Trophy size={16} className="text-accent-amber" />
         <span className="text-white font-heading font-bold text-sm">Leaderboard</span>
       </div>
-      <div className="flex-1 overflow-y-auto py-2" style={{ touchAction: 'pan-y' }}>
+      <div className="flex-1 overflow-y-auto overscroll-contain py-2" style={{ touchAction: 'pan-y' }}>
         {combined.map((entry, i) => {
           const isYou = entry.username === '@You';
           return (
@@ -306,23 +327,76 @@ function ProfileCardModal() {
 
 /* ═══════════════════════════════════════════
    Main Export: CommunityChat
+   CRITICAL IMPROVEMENT: Virtualized message list
    ═══════════════════════════════════════════ */
 
 export default function CommunityChat() {
-  const { messages, sendMessage, activeConversationId, pendingLevelUp, pendingAchievement, dismissLevelUp, dismissAchievement } = useChatContext();
+  const { messages, sendMessage, activeConversationId, pendingLevelUp, pendingAchievement, dismissLevelUp, dismissAchievement, refreshMessages } = useChatContext();
   const [inputText, setInputText] = useState('');
   const [replyTo, setReplyTo] = useState<ReplyRef | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showNewMsgPill, setShowNewMsgPill] = useState(false);
+  const lastMsgCountRef = useRef(messages.length);
+  const mountedMsgCountRef = useRef(messages.length); // Track count at mount to skip initial animations
+
+  // Pull-to-refresh state
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
 
   const isLeaderboard = activeConversationId === 'leaderboard';
+
+  // CRITICAL IMPROVEMENT: Virtualized list
+  const virtualizer = useVirtualizer({
+    count: messages.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 72,
+    overscan: 5,
+  });
+
+  // Memoize which messages are "new" (appeared after mount)
+  const newMsgIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (let i = 0; i < messages.length - mountedMsgCountRef.current; i++) {
+      ids.add(messages[i].id);
+    }
+    return ids;
+  }, [messages]);
+
+  // CRITICAL IMPROVEMENT: Auto-scroll on new incoming messages
+  useEffect(() => {
+    if (messages.length > lastMsgCountRef.current) {
+      const el = scrollRef.current;
+      if (el && el.scrollTop < 100) {
+        // User is near top — auto-scroll to newest
+        virtualizer.scrollToIndex(0, { behavior: 'smooth' });
+      } else if (el && el.scrollTop >= 100) {
+        // User is reading old messages — show pill
+        setShowNewMsgPill(true);
+      }
+    }
+    lastMsgCountRef.current = messages.length;
+  }, [messages.length, virtualizer]);
+
+  // Reset mount count on conversation switch
+  useEffect(() => {
+    mountedMsgCountRef.current = messages.length;
+    lastMsgCountRef.current = messages.length;
+    setShowNewMsgPill(false);
+  }, [activeConversationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // CRITICAL IMPROVEMENT: Fire confetti on level up
+  useEffect(() => {
+    if (pendingLevelUp) fireLevelUpConfetti();
+  }, [pendingLevelUp]);
 
   const handleSend = useCallback(() => {
     if (!inputText.trim()) return;
     sendMessage(inputText, replyTo);
     setInputText('');
     setReplyTo(null);
-    setTimeout(() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' }), 50);
-  }, [inputText, replyTo, sendMessage]);
+    setTimeout(() => virtualizer.scrollToIndex(0, { behavior: 'smooth' }), 50);
+  }, [inputText, replyTo, sendMessage, virtualizer]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
@@ -330,6 +404,43 @@ export default function CommunityChat() {
 
   // Clear reply when switching conversations
   useEffect(() => { setReplyTo(null); }, [activeConversationId]);
+
+  // CRITICAL IMPROVEMENT: Pull-to-refresh handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const el = scrollRef.current;
+    if (el && el.scrollTop <= 0 && !isRefreshing) {
+      touchStartY.current = e.touches[0].clientY;
+    }
+  }, [isRefreshing]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartY.current === 0 || isRefreshing) return;
+    const el = scrollRef.current;
+    if (!el || el.scrollTop > 0) return;
+    const delta = e.touches[0].clientY - touchStartY.current;
+    if (delta > 0) {
+      setPullDistance(Math.min(delta * 0.5, 80));
+    }
+  }, [isRefreshing]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (pullDistance > 60 && !isRefreshing) {
+      setIsRefreshing(true);
+      refreshMessages?.();
+      setTimeout(() => {
+        setIsRefreshing(false);
+        setPullDistance(0);
+      }, 800);
+    } else {
+      setPullDistance(0);
+    }
+    touchStartY.current = 0;
+  }, [pullDistance, isRefreshing, refreshMessages]);
+
+  const scrollToTop = useCallback(() => {
+    virtualizer.scrollToIndex(0, { behavior: 'smooth' });
+    setShowNewMsgPill(false);
+  }, [virtualizer]);
 
   return (
     <div className="flex flex-col h-full bg-body relative">
@@ -340,19 +451,72 @@ export default function CommunityChat() {
         <LeaderboardView />
       ) : (
         <>
-          {/* Messages */}
+          {/* Pull-to-refresh indicator */}
+          {(pullDistance > 0 || isRefreshing) && (
+            <div
+              className="flex items-center justify-center flex-shrink-0 overflow-hidden transition-all"
+              style={{ height: isRefreshing ? 40 : pullDistance * 0.5 }}
+            >
+              <div className="neon-spinner" />
+            </div>
+          )}
+
+          {/* CRITICAL IMPROVEMENT: Virtualized messages */}
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto py-2"
+            className="flex-1 overflow-y-auto overscroll-contain py-2"
             style={{ touchAction: 'pan-y' }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
-            {messages.map(msg => (
-              <MessageBubble key={msg.id} msg={msg} onReply={setReplyTo} />
-            ))}
+            <div
+              style={{
+                height: `${virtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {virtualizer.getVirtualItems().map(virtualItem => (
+                <div
+                  key={virtualItem.key}
+                  data-index={virtualItem.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
+                >
+                  <MessageBubble
+                    msg={messages[virtualItem.index]}
+                    onReply={setReplyTo}
+                    isNew={newMsgIds.has(messages[virtualItem.index].id)}
+                  />
+                </div>
+              ))}
+            </div>
             {messages.length === 0 && (
               <p className="text-center text-muted text-xs py-8 font-heading">No messages yet. Say something!</p>
             )}
           </div>
+
+          {/* New messages pill */}
+          <AnimatePresence>
+            {showNewMsgPill && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                onClick={scrollToTop}
+                className="absolute top-24 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full bg-accent-purple text-white text-[11px] font-heading font-semibold shadow-glow-purple"
+              >
+                ↑ New messages
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {/* Reply bar */}
           <AnimatePresence>
@@ -374,8 +538,8 @@ export default function CommunityChat() {
             )}
           </AnimatePresence>
 
-          {/* Compose bar */}
-          <div className="flex items-center gap-2 px-3 py-2 bg-paper border-t border-border-subtle flex-shrink-0">
+          {/* Compose bar — CRITICAL IMPROVEMENT: safe-bottom for iOS */}
+          <div className="flex items-center gap-2 px-3 py-2 bg-paper border-t border-border-subtle flex-shrink-0 safe-bottom">
             <input
               type="text"
               value={inputText}
@@ -384,13 +548,15 @@ export default function CommunityChat() {
               placeholder="Say something..."
               className="flex-1 bg-surface text-white text-[13px] px-3 py-2 rounded-full border border-border-subtle placeholder:text-muted focus:outline-none focus:border-accent-purple/50"
             />
-            <button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               onClick={handleSend}
               disabled={!inputText.trim()}
               className="flex items-center justify-center w-8 h-8 rounded-full bg-accent-purple text-white transition-all hover:bg-accent-purple/80 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <Send size={14} />
-            </button>
+            </motion.button>
           </div>
         </>
       )}

@@ -11,8 +11,35 @@ import { fireBuyConfetti } from '../hooks/useDopamine';
 
 /* ── helpers ── */
 
+// CRITICAL IMPROVEMENT: Animated count-up for confidence percentage
+function useCountUp(target: number, duration = 600): number {
+  const [current, setCurrent] = useState(0);
+  const prevTarget = useRef(target);
+
+  useEffect(() => {
+    if (target === prevTarget.current && current !== 0) return;
+    prevTarget.current = target;
+    const start = performance.now();
+    let rafId: number;
+
+    function tick(now: number) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCurrent(Math.round(eased * target));
+      if (progress < 1) rafId = requestAnimationFrame(tick);
+    }
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [target, duration]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return current;
+}
+
 function ConfidenceBar({ value }: { value: number }) {
   const pct = Math.round(value * 100);
+  const displayPct = useCountUp(pct);
   const color = pct >= 70 ? 'bg-accent-green' : pct >= 50 ? 'bg-accent-amber' : 'bg-accent-red';
   const label = pct >= 70 ? 'High' : pct >= 50 ? 'Medium' : 'Low';
   const labelColor = pct >= 70 ? 'text-accent-green' : pct >= 50 ? 'text-accent-amber' : 'text-accent-red';
@@ -26,7 +53,7 @@ function ConfidenceBar({ value }: { value: number }) {
     <div className="space-y-1">
       <div className="flex justify-between items-center">
         <span className="text-[11px] text-muted font-heading">Confidence</span>
-        <span className={`text-[11px] font-semibold font-mono ${labelColor}`}>{label} · {pct}%</span>
+        <span className={`text-[11px] font-semibold font-mono ${labelColor}`}>{label} · {displayPct}%</span>
       </div>
       <div className="h-2 bg-border-strong rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${pct}%` }} />

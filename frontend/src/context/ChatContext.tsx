@@ -113,6 +113,7 @@ interface ChatContextValue {
   dismissAchievement: () => void;
   showProfileCard: boolean;
   setShowProfileCard: (v: boolean) => void;
+  refreshMessages: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -368,6 +369,23 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const dismissLevelUp = useCallback(() => setPendingLevelUp(null), []);
   const dismissAchievement = useCallback(() => setPendingAchievement(null), []);
 
+  // CRITICAL IMPROVEMENT: Pull-to-refresh — generate batch of fake messages
+  const refreshMessages = useCallback(() => {
+    const convoId = activeConversationId;
+    if (convoId === 'leaderboard' || convoId.startsWith('dm-')) return;
+    const price = livePriceRef.current;
+    const priceStr = price ? `$${price.toLocaleString()}` : undefined;
+    const count = 3 + Math.floor(Math.random() * 3); // 3-5 messages
+    const newMsgs: ChatMessage[] = [];
+    for (let i = 0; i < count; i++) {
+      newMsgs.push(generateFakeMessage(convoId, i * 2, priceStr));
+    }
+    setMessagesMap(prev => ({
+      ...prev,
+      [convoId]: [...newMsgs, ...(prev[convoId] ?? [])].slice(0, MAX_MSGS),
+    }));
+  }, [activeConversationId]);
+
   return (
     <ChatContext.Provider value={{
       conversations, activeConversationId, setActiveConversation,
@@ -376,6 +394,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       pendingLevelUp, pendingAchievement,
       dismissLevelUp, dismissAchievement,
       showProfileCard, setShowProfileCard,
+      refreshMessages,
     }}>
       {children}
     </ChatContext.Provider>
