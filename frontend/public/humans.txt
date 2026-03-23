@@ -1,0 +1,19 @@
+/* TEAM */
+Creator: @yourasianquant
+Site: https://fun.stockyai.xyz
+Twitter: https://x.com/yourasianquant
+GitHub: https://github.com/SirCharan
+
+/* THANKS */
+Groq — blazing fast LLM inference
+CoinGecko — free crypto market data
+TradingView — embeddable charts
+Vercel — serverless deployment
+Claude Code — AI pair programming
+
+/* SITE */
+Last update: 2026-03-23
+Language: English
+Standards: HTML5, CSS3, ES2024
+Components: React 19, TypeScript, Tailwind CSS, Vite
+Software: Stocky Fun v2.0
