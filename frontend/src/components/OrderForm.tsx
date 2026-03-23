@@ -55,24 +55,24 @@ export default function OrderForm() {
     : null;
 
   return (
-    <div className="p-3 pb-6 border-b border-border-subtle">
+    <div className="p-3 pb-6">
       {/* Buy / Sell toggle */}
       <div className="flex rounded-full bg-body p-0.5 border border-border-subtle mb-2">
         <button
           onClick={() => setSide('buy')}
-          className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold font-heading rounded-full transition-all active:scale-95 ${
+          className={`flex-1 flex items-center justify-center gap-1 py-1 text-[11px] font-bold font-heading rounded-full transition-all active:scale-95 ${
             side === 'buy' ? 'bg-accent-green text-black shadow-glow-green' : 'text-muted hover:text-white'
           }`}
         >
-          <TrendingUp size={12} /> BUY
+          <TrendingUp size={11} /> BUY
         </button>
         <button
           onClick={() => setSide('sell')}
-          className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold font-heading rounded-full transition-all active:scale-95 ${
+          className={`flex-1 flex items-center justify-center gap-1 py-1 text-[11px] font-bold font-heading rounded-full transition-all active:scale-95 ${
             side === 'sell' ? 'bg-accent-red text-white shadow-glow-red' : 'text-muted hover:text-white'
           }`}
         >
-          <TrendingDown size={12} /> SELL
+          <TrendingDown size={11} /> SELL
         </button>
       </div>
 

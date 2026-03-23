@@ -62,7 +62,7 @@ const PROMPT_CATEGORIES = [
 ];
 
 export default function PromptInput() {
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState('Next 5 mins - up or down?');
   const [showAll, setShowAll] = useState(false);
   const { analyze } = useAnalysis();
   const { isAnalyzing } = useTradingContext();
