@@ -181,7 +181,7 @@ export default function SignalDisplay() {
             <div className="h-3 bg-border-strong rounded" />
             <div className="h-3 bg-border-strong rounded w-4/5" />
           </div>
-          <p className="text-center text-muted text-xs mt-3 font-heading">Analyzing {coin.symbol} with Groq + TA...</p>
+          <p className="text-center text-muted text-xs mt-3 font-heading">Analyzing {coin.symbol} with Stocky AI...</p>
         </div>
       </div>
     );
@@ -204,7 +204,7 @@ export default function SignalDisplay() {
   }[lastSignal.signal];
 
   const borderColor = isUp ? 'border-accent-green/40' : 'border-accent-red/40';
-  const modelName = lastSignal.modelUsed?.replace(/-versatile|-instant/g, '') ?? 'groq';
+  const _modelUsed = lastSignal.modelUsed; // kept for debugging
   const breakdown = lastSignal.confidenceBreakdown;
 
   return (
@@ -241,7 +241,9 @@ export default function SignalDisplay() {
         {/* Metadata row: model + reliability + timestamp */}
         <div className="flex items-center justify-between mb-3 px-1">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] text-muted font-mono">{modelName}</span>
+            <a href="https://www.charandeepkapoor.com/blog/stocky-ai" target="_blank" rel="noopener noreferrer" className="text-[10px] text-accent-green/70 hover:text-accent-green font-heading transition-colors">
+              Stocky AI
+            </a>
             <ReliabilityBadge confidence={lastSignal.confidence} signalScore={lastSignal.ta.signalScore} />
           </div>
           {analysisTimestamp && <TimeAgo timestamp={analysisTimestamp} />}
