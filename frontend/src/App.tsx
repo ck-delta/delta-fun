@@ -12,6 +12,7 @@ import SwipePanels from './components/SwipePanels';
 import SwipeHint, { shouldShowSwipeHint, markSwipeHintSeen } from './components/SwipeHint';
 import InstallPrompt from './components/InstallPrompt';
 import CommunityChat from './components/CommunityChat'; // NEW
+import { ChatProvider } from './context/ChatContext'; // NEW
 import { useOvershoot } from './hooks/useOvershoot';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { CheckCircle, XCircle, ChevronUp, ChevronDown, Sparkles, ShoppingCart, MessageCircle } from 'lucide-react';
@@ -250,7 +251,7 @@ function AppInner() {
             <TradeHistory />
           </div>
           {/* Right column: community chat */}
-          <div className="w-[300px] flex-shrink-0 h-full border-l border-border-subtle">
+          <div className="w-[400px] flex-shrink-0 h-full border-l border-border-subtle">
             <CommunityChat />
           </div>
         </div>
@@ -276,8 +277,10 @@ export default function App() {
 
   return (
     <TradingProvider>
-      {!loaded && <LoadingScreen onComplete={() => setLoaded(true)} />}
-      <AppInner />
+      <ChatProvider>
+        {!loaded && <LoadingScreen onComplete={() => setLoaded(true)} />}
+        <AppInner />
+      </ChatProvider>
     </TradingProvider>
   );
 }

@@ -28,3 +28,14 @@ export function fireCompletionConfetti() {
     gravity: 0.8,
   });
 }
+
+export function fireLevelUpConfetti() {
+  confetti({
+    particleCount: 120,
+    spread: 90,
+    origin: { y: 0.4, x: 0.5 },
+    colors: ['#00ff66', '#f59e0b', '#a855f7', '#ffffff'],
+    gravity: 0.6,
+    ticks: 300,
+  });
+}
