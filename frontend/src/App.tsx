@@ -240,18 +240,18 @@ function AppInner() {
         </div>
 
         {/* ── DESKTOP: 3-column — Trading panels (middle) + Chat (right) ── */}
-        <div className={`hidden lg:flex transition-all duration-300 ${
+        <div className={`hidden lg:flex flex-row h-full transition-all duration-300 ${
           chartFocusMode ? 'lg:w-0 overflow-hidden' : 'lg:flex-none lg:w-[50%]'
         }`}>
           {/* Middle column: trading panels */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-y-auto border-r border-border-subtle">
+          <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto border-r border-border-subtle">
             <PromptInput />
             <SignalDisplay />
             <OrderForm />
             <TradeHistory />
           </div>
           {/* Right column: community chat */}
-          <div className="w-[320px] flex-shrink-0 flex flex-col min-h-0">
+          <div className="w-[300px] flex-shrink-0 h-full border-l border-border-subtle">
             <CommunityChat />
           </div>
         </div>
