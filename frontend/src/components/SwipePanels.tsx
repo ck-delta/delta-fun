@@ -78,8 +78,8 @@ export default function SwipePanels({ panels, activePanel, onPanelChange, onSwip
         ))}
       </motion.div>
 
-      {/* Dot indicators — offset above BottomNav */}
-      <div className="absolute bottom-16 lg:bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+      {/* Dot indicators */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
         {panels.map((_, i) => (
           <div
             key={i}

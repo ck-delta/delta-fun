@@ -12,7 +12,6 @@ import SwipePanels from './components/SwipePanels';
 import SwipeHint, { shouldShowSwipeHint, markSwipeHintSeen } from './components/SwipeHint';
 import InstallPrompt from './components/InstallPrompt';
 import CommunityChat from './components/CommunityChat'; // NEW
-import BottomNav from './components/BottomNav'; // NEW
 import { useOvershoot } from './hooks/useOvershoot';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { CheckCircle, XCircle, ChevronUp, ChevronDown, Sparkles, ShoppingCart, MessageCircle } from 'lucide-react';
@@ -199,7 +198,7 @@ function AppInner() {
           </div>
 
           {/* Swipeable panels — now 3 */}
-          <div className="flex-1 min-h-0 relative pb-14">
+          <div className="flex-1 min-h-0 relative">
             <SwipePanels
               panels={[
                 <>
@@ -257,8 +256,7 @@ function AppInner() {
         </div>
       </div>
 
-      {/* NEW: Bottom navigation — mobile only */}
-      <BottomNav activePanel={activePanel} onPanelChange={handlePanelChange} />
+      {/* Bottom navigation removed per user request */}
 
       <Toast />
       <ProfitPopup />
