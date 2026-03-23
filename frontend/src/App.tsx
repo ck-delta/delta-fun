@@ -11,16 +11,18 @@ import ProfitPopup from './components/ProfitPopup';
 import SwipePanels from './components/SwipePanels';
 import SwipeHint, { shouldShowSwipeHint, markSwipeHintSeen } from './components/SwipeHint';
 import InstallPrompt from './components/InstallPrompt';
+import CommunityChat from './components/CommunityChat'; // NEW
+import BottomNav from './components/BottomNav'; // NEW
 import { useOvershoot } from './hooks/useOvershoot';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
-import { CheckCircle, XCircle, ChevronUp, ChevronDown, Sparkles, ShoppingCart } from 'lucide-react';
+import { CheckCircle, XCircle, ChevronUp, ChevronDown, Sparkles, ShoppingCart, MessageCircle } from 'lucide-react';
 import type { CoinKey } from './lib/coins';
 
 function Toast() {
   const { toast } = useTradingContext();
   if (!toast) return null;
   return (
-    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-inner shadow-2xl text-sm font-medium animate-fade-in ${
+    <div className={`fixed bottom-20 lg:bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-inner shadow-2xl text-sm font-medium animate-fade-in ${
       toast.type === 'success'
         ? 'bg-accent-green/10 border border-accent-green/30 text-accent-green'
         : 'bg-accent-red/10 border border-accent-red/30 text-accent-red'
@@ -84,10 +86,15 @@ function AppInner() {
   // Register startVision into context once
   useEffect(() => { setStartVision(startVision); }, [startVision, setStartVision]);
 
+  // NEW: 3 tab labels
   const TAB_LABELS = [
-    { label: 'AI Analysis', icon: <Sparkles size={11} /> },
-    { label: 'Paper Trade', icon: <ShoppingCart size={11} /> },
+    { label: 'AI Analysis', icon: <Sparkles size={11} />, activeColor: 'text-accent-green border-accent-green' },
+    { label: 'Paper Trade', icon: <ShoppingCart size={11} />, activeColor: 'text-accent-amber border-accent-amber' },
+    { label: 'Chat', icon: <MessageCircle size={11} />, activeColor: 'text-accent-purple border-accent-purple' },
   ];
+
+  // Is chat panel active (panel index 2)?
+  const isChatActive = activePanel === 2;
 
   return (
     <div className="h-screen w-screen bg-body flex flex-col overflow-hidden">
@@ -140,15 +147,36 @@ function AppInner() {
       </div>
 
       {/* Main layout */}
-      <div className={`flex flex-col lg:flex-row flex-1 min-h-0`}>
-        {/* Chart */}
-        <div className={`border-b lg:border-b-0 lg:border-r border-border-subtle transition-all duration-300 ${
-          chartFocusMode ? 'w-full h-full' : 'h-[50vh] lg:h-full w-full lg:w-[60%]'
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0">
+
+        {/* ── MOBILE: Chart OR price ticker ── */}
+        {isChatActive ? (
+          /* Thin price ticker when chat is active on mobile */
+          <div className="flex items-center justify-between px-4 py-1.5 bg-paper border-b border-border-subtle flex-shrink-0 lg:hidden">
+            <span className="text-muted font-heading text-[11px] uppercase tracking-wide">{coin.symbol}/USD</span>
+            {livePrice !== null && (
+              <span className="text-accent-green font-mono text-xs font-bold">
+                ${livePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              </span>
+            )}
+          </div>
+        ) : (
+          /* Full chart for Analyze/Trade panels on mobile */
+          <div className={`border-b lg:border-b-0 lg:border-r border-border-subtle transition-all duration-300 lg:hidden ${
+            chartFocusMode ? 'w-full h-full' : 'h-[50vh] w-full'
+          }`}>
+            <ChartPanel />
+          </div>
+        )}
+
+        {/* ── DESKTOP: Chart always visible (left column) ── */}
+        <div className={`hidden lg:block border-r border-border-subtle transition-all duration-300 ${
+          chartFocusMode ? 'w-full h-full' : 'h-full w-[50%]'
         }`}>
           <ChartPanel />
         </div>
 
-        {/* Mobile: Framer Motion swipeable panels */}
+        {/* ── MOBILE: Swipeable 3-panel area ── */}
         <div className={`flex flex-col min-h-0 transition-all duration-300 lg:hidden ${
           chartFocusMode ? 'h-0 overflow-hidden' : 'flex-1'
         }`}>
@@ -160,7 +188,7 @@ function AppInner() {
                 onClick={() => setActivePanel(i)}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 min-h-[44px] text-[11px] font-heading font-semibold uppercase tracking-wide transition-all border-b-2 ${
                   activePanel === i
-                    ? 'text-accent-green border-accent-green'
+                    ? tab.activeColor
                     : 'text-muted border-transparent'
                 }`}
               >
@@ -170,8 +198,8 @@ function AppInner() {
             ))}
           </div>
 
-          {/* Swipeable panels */}
-          <div className="flex-1 min-h-0 relative">
+          {/* Swipeable panels — now 3 */}
+          <div className="flex-1 min-h-0 relative pb-14">
             <SwipePanels
               panels={[
                 <>
@@ -179,6 +207,7 @@ function AppInner() {
                   <PromptInput />
                 </>,
                 <OrderForm />,
+                <CommunityChat />,
               ]}
               activePanel={activePanel}
               onPanelChange={handlePanelChange}
@@ -190,33 +219,46 @@ function AppInner() {
             />
           </div>
 
-          {/* Collapsible Trade History toggle */}
-          <button
-            onClick={() => setShowHistory(v => !v)}
-            className="flex items-center justify-center gap-2 py-2.5 min-h-[44px] bg-paper border-t border-border-subtle text-[11px] text-muted font-heading uppercase tracking-wide hover:text-white transition-colors flex-shrink-0"
-            style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}
-          >
-            {showHistory ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
-            Trade History{tradeCount > 0 ? ` (${tradeCount})` : ''}
-          </button>
+          {/* Collapsible Trade History — hidden on Chat panel */}
+          {!isChatActive && (
+            <>
+              <button
+                onClick={() => setShowHistory(v => !v)}
+                className="flex items-center justify-center gap-2 py-2.5 min-h-[44px] bg-paper border-t border-border-subtle text-[11px] text-muted font-heading uppercase tracking-wide hover:text-white transition-colors flex-shrink-0"
+              >
+                {showHistory ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+                Trade History{tradeCount > 0 ? ` (${tradeCount})` : ''}
+              </button>
 
-          {showHistory && (
-            <div className="max-h-[40vh] overflow-y-auto border-t border-border-subtle animate-slide-up flex-shrink-0">
-              <TradeHistory />
-            </div>
+              {showHistory && (
+                <div className="max-h-[40vh] overflow-y-auto border-t border-border-subtle animate-slide-up flex-shrink-0">
+                  <TradeHistory />
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {/* Desktop: original stacked layout */}
-        <div className={`hidden lg:flex flex-col min-h-0 overflow-y-auto transition-all duration-300 ${
-          chartFocusMode ? 'lg:w-0 overflow-hidden' : 'lg:flex-none lg:w-[40%]'
+        {/* ── DESKTOP: 3-column — Trading panels (middle) + Chat (right) ── */}
+        <div className={`hidden lg:flex transition-all duration-300 ${
+          chartFocusMode ? 'lg:w-0 overflow-hidden' : 'lg:flex-none lg:w-[50%]'
         }`}>
-          <PromptInput />
-          <SignalDisplay />
-          <OrderForm />
-          <TradeHistory />
+          {/* Middle column: trading panels */}
+          <div className="flex-1 flex flex-col min-h-0 overflow-y-auto border-r border-border-subtle">
+            <PromptInput />
+            <SignalDisplay />
+            <OrderForm />
+            <TradeHistory />
+          </div>
+          {/* Right column: community chat */}
+          <div className="w-[320px] flex-shrink-0 flex flex-col min-h-0">
+            <CommunityChat />
+          </div>
         </div>
       </div>
+
+      {/* NEW: Bottom navigation — mobile only */}
+      <BottomNav activePanel={activePanel} onPanelChange={handlePanelChange} />
 
       <Toast />
       <ProfitPopup />
