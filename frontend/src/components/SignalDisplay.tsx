@@ -204,7 +204,7 @@ export default function SignalDisplay() {
   }[lastSignal.signal];
 
   const borderColor = isUp ? 'border-accent-green/40' : 'border-accent-red/40';
-  const _modelUsed = lastSignal.modelUsed; // kept for debugging
+  void lastSignal.modelUsed; // kept for debugging
   const breakdown = lastSignal.confidenceBreakdown;
 
   return (

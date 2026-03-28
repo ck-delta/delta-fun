@@ -1,4 +1,4 @@
-export const COIN_KEYS = ['BTC', 'ETH', 'SOL', 'BNB', 'HYPE'] as const;
+export const COIN_KEYS = ['BTC', 'ETH', 'SOL', 'BNB', 'HYPE', 'GOLD'] as const;
 export type CoinKey = typeof COIN_KEYS[number];
 
 export interface CoinConfig {
@@ -44,5 +44,12 @@ export const COINS: Record<CoinKey, CoinConfig> = {
     name: 'Hyperliquid',
     // No Binance pair — falls back to CoinGecko REST polling
     tvSymbol: 'BYBIT:HYPEUSDT',
+  },
+  GOLD: {
+    id: 'tether-gold',
+    symbol: 'GOLD',
+    name: 'Gold (XAU)',
+    // No Binance pair — falls back to CoinGecko REST polling
+    tvSymbol: 'TVC:GOLD',
   },
 };

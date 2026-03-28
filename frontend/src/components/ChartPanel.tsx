@@ -15,6 +15,7 @@ const COIN_NAMES: Record<CoinKey, string> = {
   SOL: 'Solana',
   BNB: 'BNB Chain',
   HYPE: 'Hyperliquid',
+  GOLD: 'Gold (XAU)',
 };
 
 const INTERVALS: { label: string; value: Interval }[] = [

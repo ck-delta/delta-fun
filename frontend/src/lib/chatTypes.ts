@@ -143,6 +143,9 @@ export const FAKE_USERNAMES = [
   '@VikramCharts', '@DeepikaDegen', '@KaranHODL', '@NehaMacro',
   '@AmitBull', '@PoojaSignals', '@RohanFOMO', '@MeghaDCA',
   '@SureshGains', '@DivyaMoon', '@ManishATR',
+  '@NiftyScalper', '@MCXGoldBull', '@BankNiftyKing', '@SmallcapHunter',
+  '@FnOWarrior', '@SIPKaRaja', '@LucknowTrader', '@JaipurBull',
+  '@IndoreOptions', '@BhopalFnO', '@PuneChartist', '@NagpurDealer',
 ];
 
 // ── Fake message pools ──
@@ -167,6 +170,24 @@ export const FAKE_MESSAGES_GENERAL = [
   'Accumulating physical gold on every dip',
   'BTC hash rate at ATH, network stronger than ever',
   'Oil inventories data in 2 hours, watch out',
+  'Bank Nifty weekly expiry tomorrow, premium decay incoming 📉',
+  'Nifty 24500 CE writing heavy, resistance confirmed',
+  'MCX gold lot size change coming, check margins bhai',
+  'Smallcap index on fire, Tier 2 stocks leading 🔥',
+  'F&O ban list update — check before taking positions',
+  'SGX Nifty flat, gap-up unlikely tomorrow',
+  'SEBI new margin rules hitting options writers hard',
+  'IPO listing today — expecting 40% premium minimum',
+  'Reliance breakout above 2900, target 3100 next',
+  'Tata Motors DVR discount narrowing, arbitrage play?',
+  'Adani group stocks recovering, FII buying spotted',
+  'RBI repo rate unchanged, rate-sensitive stocks pumping',
+  'SIP flows at all-time high, ₹20k crore monthly now',
+  'Midcap mutual funds restricting inflows, FOMO building',
+  'IT sector weak post TCS results, avoid Infosys calls',
+  'PSU bank index breakout, SBI leading the charge',
+  'Crude at $85, OMCs under pressure, avoid IOC BPCL',
+  'Pharma sector rotation happening, Sun Pharma looks good',
 ];
 
 export const FAKE_MESSAGES_WHALE = [
