@@ -16,4 +16,4 @@ Last update: 2026-03-23
 Language: English
 Standards: HTML5, CSS3, ES2024
 Components: React 19, TypeScript, Tailwind CSS, Vite
-Software: Stocky Fun v2.0
+Software: Stocky Fun v2.1

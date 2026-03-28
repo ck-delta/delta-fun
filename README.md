@@ -16,22 +16,23 @@
 
 ---
 
-An addictive, mobile-first Progressive Web App for real-time BTC/USD technical analysis. Ask AI anything about the market, get buy/sell signals with confidence scores, paper trade with live PnL, and chat with the community — all wrapped in a dark, neon-green trading aesthetic. Installable on iPhone and Android.
+An addictive, mobile-first Progressive Web App for real-time crypto and gold technical analysis. Ask Stocky AI anything about the market, get buy/sell signals with chain-of-thought reasoning, paper trade with live PnL, and chat with the Indian trading community — all wrapped in a dark, neon-green casino aesthetic. Installable on iPhone and Android.
 
 ---
 
 ## Features
 
 - **Live BTC/USD Charts** — TradingView and GeckoTerminal embeds with 1s/1m/5m/15m timeframes
-- **AI Trading Signals** — Natural language prompts analyzed by Groq LLM (Llama 3.3 70B) with structured buy/sell/hold signals
+- **AI Trading Signals** — Natural language prompts analyzed by Stocky AI with chain-of-thought reasoning and confidence breakdown
 - **Technical Analysis** — RSI, MACD, Bollinger Bands, Stochastic, EMA (9/21/200), ATR, support/resistance levels
 - **Paper Trading** — Simulated trading at live BTC price with PnL tracking, trade history, win/loss streaks
-- **Community Chat** — Live messaging with other traders
+- **Second Opinion** — Devil's advocate critique of every AI signal
+- **Community Chat** — Live messaging with Indian tier 2 market discussion (Nifty, Bank Nifty, MCX Gold, F&O)
 - **Mobile-First Swipe UI** — Scroll-snap panels for AI Analysis, Paper Trade, and Chat
 - **PWA Installable** — Add to Home Screen on iOS/Android with offline support
-- **Gamification** — Confetti on profitable trades, profit popups, dopamine-driven UX
+- **Gamification** — XP, levels, achievements, daily quests, leaderboard, confetti effects
 - **Visual Chart AI** — Optional screen-share chart analysis via Overshoot.ai
-- **Multi-Coin** — BTC, ETH, SOL, BNB support
+- **Multi-Asset** — BTC, ETH, SOL, BNB, HYPE, Gold (XAU) support
 
 ---
 
@@ -41,8 +42,8 @@ An addictive, mobile-first Progressive Web App for real-time BTC/USD technical a
 |-------|-----------|
 | Frontend | React 19, TypeScript, Tailwind CSS, Vite, Framer Motion |
 | Backend | Node.js, Express, TypeScript |
-| AI | Groq LLM (`llama-3.3-70b-versatile`) |
-| Vision AI | Overshoot.ai (`Qwen2.5-VL-72B-Instruct`) |
+| AI | Stocky AI (proprietary signal engine) |
+| Vision AI | Overshoot.ai (chart pattern recognition) |
 | Market Data | CoinGecko API (free tier) |
 | Charts | TradingView, GeckoTerminal |
 | Deployment | Vercel (monorepo: static frontend + serverless API) |
@@ -89,6 +90,7 @@ Frontend: `http://localhost:5173` | Backend: `http://localhost:3001`
 | `GET` | `/api/market/price?coin=bitcoin` | Live price |
 | `GET` | `/api/market/ohlc?coin=bitcoin` | 1-day OHLC candles |
 | `GET` | `/api/trades` | Paper trade history + PnL |
+| `POST` | `/api/analyze/critique` | Second opinion on AI analysis |
 | `POST` | `/api/trades` | Place paper trade |
 
 ---
@@ -117,6 +119,15 @@ stocky-fun/
 ## Disclaimer
 
 Not financial advice. All trading is paper (simulated) only. AI predictions are probabilistic and should not be used for real investment decisions.
+
+---
+
+## Documentation
+
+- [AI Signal Generation Guide](https://fun.stockyai.xyz/ai.md) — how Stocky AI produces signals
+- [System Architecture](https://fun.stockyai.xyz/architecture.md) — full technical architecture
+- [LLM Integration Guide](https://fun.stockyai.xyz/llm.md) — API docs for developers
+- [Blog: How Stocky AI Works](https://www.charandeepkapoor.com/blog/stocky-ai)
 
 ---
 

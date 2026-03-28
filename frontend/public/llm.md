@@ -2,7 +2,11 @@
 
 ## What is Stocky Fun?
 
-Stocky Fun is an open-source, casino-style Progressive Web App for real-time BTC/USD technical analysis, AI-powered trading signals, paper trading, and community chat. It runs at [fun.stockyai.xyz](https://fun.stockyai.xyz).
+Stocky Fun is an open-source, casino-style Progressive Web App for real-time crypto and gold technical analysis, AI-powered trading signals, paper trading, and community chat. It runs at [fun.stockyai.xyz](https://fun.stockyai.xyz).
+
+## Supported Assets
+
+BTC (Bitcoin), ETH (Ethereum), SOL (Solana), BNB (BNB Chain), HYPE (Hyperliquid), GOLD (Gold/XAU)
 
 ## AI Analysis API
 
@@ -17,10 +21,13 @@ Content-Type: application/json
 
 ```json
 {
-  "prompt": "Is RSI confirming the current trend direction?",
-  "coin": "bitcoin"
+  "prompt": "Should I buy BTC now?",
+  "coin": "bitcoin",
+  "coinSymbol": "BTC"
 }
 ```
+
+Supported coin IDs: `bitcoin`, `ethereum`, `solana`, `binancecoin`, `hyperliquid`, `tether-gold`
 
 ### Response
 
@@ -29,22 +36,38 @@ Content-Type: application/json
   "prediction": "up",
   "confidence": 0.72,
   "signal": "buy",
-  "rationale": "RSI 62 trending up with MACD histogram expanding...",
-  "keyLevels": "Support $67,500, Resistance $69,300",
-  "action": "Buy above $68,500 with stop at $67,200",
-  "risk": "Break below $67,500 invalidates setup",
-  "thinking": "Step-by-step reasoning...",
+  "rationale": "EMA stack fully aligned bullish. RSI at 58 with room to 70. Fresh MACD bullish cross confirms momentum...",
+  "keyLevels": "Support $84,800, Resistance $87,200, EMA200 $82,100",
+  "action": "Enter long at $86,000 with stop at $84,600, target $88,400 (R:R 1.7:1)",
+  "risk": "Break below $84,800 support invalidates — would signal EMA stack breakdown",
+  "thinking": "Step1: EMA stack fully bullish... Step5: 4/5 groups bullish",
   "confidenceBreakdown": {
-    "trend": "EMA9 > EMA21 > EMA200, all slopes positive",
-    "momentum": "RSI 62 bullish, MACD expanding",
-    "volatility": "BB squeeze releasing upward",
-    "structure": "Price above key support",
-    "confluence": "4/5 indicator groups bullish"
+    "trend": "EMA stack fully bullish with rising slopes",
+    "momentum": "RSI 58 + fresh MACD bullish cross confirm upward momentum",
+    "volatility": "BB %B 0.65, no squeeze — trending without overextension",
+    "structure": "Price 2% above support with ATR-based room to resistance",
+    "confluence": "4/5 groups align bullish"
   },
-  "modelUsed": "llama-3.3-70b-versatile",
-  "ta": { ... }
+  "ta": { "currentPrice": 86000, "rsi": 58, "macd": 145, "..." : "..." }
 }
 ```
+
+### Critique / Second Opinion Endpoint
+
+```
+POST https://fun.stockyai.xyz/api/analyze/critique
+Content-Type: application/json
+```
+
+```json
+{
+  "analysis": { "prediction": "up", "confidence": 0.72, "signal": "buy", "rationale": "..." },
+  "ta": { "currentPrice": 86000, "rsi": 58, "..." : "..." },
+  "coinSymbol": "BTC"
+}
+```
+
+Returns flaws, overlooked factors, alternative view, adjusted confidence, and verdict (agree/disagree/partially_agree).
 
 ### Example Prompts
 
@@ -58,7 +81,6 @@ Content-Type: application/json
 
 - No authentication required
 - Reasonable use expected (no hard rate limit currently enforced)
-- Backend uses Groq LLM (llama-3.3-70b-versatile) with CoinGecko market data
 
 ## Other Endpoints
 
@@ -66,11 +88,22 @@ Content-Type: application/json
 |--------|------|-------------|
 | `GET` | `/api/market/price?coin=bitcoin` | Live price |
 | `GET` | `/api/market/ohlc?coin=bitcoin` | 1-day OHLC candles |
+| `POST` | `/api/analyze/critique` | Second opinion on analysis |
+
+## More Documentation
+
+- [AI Signal Generation Guide](https://fun.stockyai.xyz/ai.md) — how signals are computed
+- [System Architecture](https://fun.stockyai.xyz/architecture.md)
+- [Project Summary](https://fun.stockyai.xyz/summary.md)
 
 ## Tech Stack
 
-React 19, TypeScript, Tailwind CSS, Vite, Framer Motion, Groq LLM, CoinGecko API, TradingView charts, Vercel serverless.
+React 19, TypeScript, Tailwind CSS, Vite, Framer Motion, Stocky AI, CoinGecko API, Binance WebSocket, TradingView charts, Vercel serverless.
 
 ## Source Code
 
 [github.com/SirCharan/stocky-fun](https://github.com/SirCharan/stocky-fun)
+
+## Blog
+
+[charandeepkapoor.com/blog/stocky-ai](https://www.charandeepkapoor.com/blog/stocky-ai)

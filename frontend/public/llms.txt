@@ -1,37 +1,50 @@
-# Stocky Fun — AI-Powered Crypto Trading Dashboard
+# Stocky Fun — AI-Powered Crypto & Gold Trading Dashboard
 # https://fun.stockyai.xyz
 
-> Casino-style BTC trading PWA with AI signals, live charts, paper trading, and community chat.
+> Casino-style trading PWA with AI signals, live charts, paper trading, community chat, and gamification.
 
 ## About
 
-Stocky Fun is a free, open-source Progressive Web App for real-time BTC/USD technical analysis. It uses Groq LLM (Llama 3.3 70B) to generate AI-powered buy/sell/hold signals from natural language prompts, combined with comprehensive technical indicators (RSI, MACD, Bollinger Bands, Stochastic, EMA, ATR).
+Stocky Fun is a free, open-source Progressive Web App for real-time technical analysis of crypto and gold. Stocky AI generates buy/sell/hold signals from natural language prompts, combining 20+ technical indicators (RSI, MACD, Bollinger Bands, Stochastic, EMA, ATR) with chain-of-thought reasoning and confidence calibration.
+
+## Supported Assets
+
+BTC (Bitcoin), ETH (Ethereum), SOL (Solana), BNB (BNB Chain), HYPE (Hyperliquid), GOLD (Gold/XAU)
 
 ## Features
 
-- Real-time BTC/USD charts via TradingView and GeckoTerminal
-- AI trading signals from natural language prompts
-- Technical analysis: RSI, MACD, Bollinger Bands, Stochastic, EMA (9/21/200), ATR
+- Real-time charts via TradingView (1s/1m/5m/15m timeframes)
+- AI trading signals with 5-step chain-of-thought reasoning
+- Confidence breakdown: trend, momentum, volatility, structure, confluence
+- Second opinion / critique endpoint (devil's advocate analysis)
+- Technical analysis: RSI, MACD, Bollinger Bands, Stochastic, EMA (9/21/50/200), ATR
 - Paper trading simulator with PnL tracking
-- Community chat
+- Community chat with Indian tier 2 market discussion
+- Gamification: XP, levels, achievements, daily quests, leaderboard
 - Mobile-first swipeable UI (PWA installable on iOS/Android)
-- Multi-coin: BTC, ETH, SOL, BNB
 
 ## AI API
 
 POST https://fun.stockyai.xyz/api/analyze
-Body: { "prompt": "Should I buy BTC now?", "coin": "bitcoin" }
-Returns: prediction, confidence, signal, rationale, key levels, action, risk
+Body: { "prompt": "Should I buy BTC now?", "coin": "bitcoin", "coinSymbol": "BTC" }
+Returns: prediction, confidence, signal, rationale, keyLevels, action, risk, thinking, confidenceBreakdown
+
+POST https://fun.stockyai.xyz/api/analyze/critique
+Body: { "analysis": {...}, "ta": {...}, "coinSymbol": "BTC" }
+Returns: flaws, overlooked, alternativeView, adjustedConfidence, verdict
 
 ## More Info
 
-- Full LLM integration guide: https://fun.stockyai.xyz/llm.md
+- AI signal guide: https://fun.stockyai.xyz/ai.md
+- Architecture: https://fun.stockyai.xyz/architecture.md
+- LLM integration: https://fun.stockyai.xyz/llm.md
 - Project summary: https://fun.stockyai.xyz/summary.md
 - Source code: https://github.com/SirCharan/stocky-fun
+- Blog: https://www.charandeepkapoor.com/blog/stocky-ai
 
 ## Tech Stack
 
-React 19, TypeScript, Tailwind CSS, Vite, Framer Motion, Node.js, Express, Groq LLM, CoinGecko API, TradingView, Vercel serverless.
+React 19, TypeScript, Tailwind CSS, Vite, Framer Motion, Node.js, Express, Stocky AI, CoinGecko API, Binance WebSocket, TradingView, Vercel serverless.
 
 ## Contact
 

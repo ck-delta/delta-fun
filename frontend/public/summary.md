@@ -2,17 +2,22 @@
 
 ## Purpose
 
-Stocky Fun is a free, open-source Progressive Web App that combines real-time cryptocurrency charting with AI-powered technical analysis and paper trading. It targets mobile-first users who want a fast, addictive trading experience without risking real money.
+Stocky Fun is a free, open-source Progressive Web App that combines real-time cryptocurrency and gold charting with AI-powered technical analysis, paper trading, and community chat. It targets mobile-first users who want a fast, addictive trading experience without risking real money.
 
 ## Key Features
 
-- **Real-time BTC/USD charts** via TradingView and GeckoTerminal embeds
-- **AI trading signals** powered by Groq LLM (Llama 3.3 70B) with RSI, MACD, Bollinger Bands, Stochastic, EMA, ATR analysis
+- **Real-time charts** for BTC, ETH, SOL, BNB, HYPE, and Gold (XAU) via TradingView
+- **AI trading signals** powered by Stocky AI with 5-step chain-of-thought reasoning, confidence breakdown, and evidence-backed rationale
+- **Second Opinion** — devil's advocate critique of every signal for balanced analysis
 - **Paper trading simulator** with live PnL tracking, trade history, and win/loss streaks
-- **Community chat** with live messaging
-- **Mobile-first swipeable UI** with scroll-snap panels (AI Analysis / Paper Trade / Chat)
+- **Community chat** with Indian tier 2 market discussion (Nifty, Bank Nifty, MCX Gold, F&O)
+- **Mobile-first swipeable UI** with 3-panel carousel (AI Analysis / Paper Trade / Chat)
 - **PWA installable** on iPhone and Android with offline support
-- **Gamification** with confetti, profit popups, and dopamine-driven UX
+- **Gamification** — XP, levels, achievements, daily quests, leaderboard, confetti effects
+
+## Supported Assets
+
+BTC (Bitcoin), ETH (Ethereum), SOL (Solana), BNB (BNB Chain), HYPE (Hyperliquid), GOLD (Gold/XAU)
 
 ## Tech Stack
 
@@ -20,10 +25,10 @@ Stocky Fun is a free, open-source Progressive Web App that combines real-time cr
 |-------|-----------|
 | Frontend | React 19, TypeScript, Tailwind CSS, Vite, Framer Motion |
 | Backend | Node.js, Express, TypeScript (Vercel serverless) |
-| AI | Groq LLM (llama-3.3-70b-versatile) |
-| Vision AI | Overshoot.ai (Qwen2.5-VL-72B-Instruct) |
-| Market Data | CoinGecko API |
-| Charts | TradingView, GeckoTerminal |
+| AI | Stocky AI (proprietary signal engine) |
+| Vision AI | Overshoot.ai (chart pattern recognition) |
+| Market Data | CoinGecko API, Binance WebSocket |
+| Charts | TradingView lightweight-charts |
 | Deployment | Vercel (monorepo: static frontend + serverless API) |
 
 ## How to Run Locally
@@ -38,9 +43,19 @@ npm run dev
 
 Frontend: http://localhost:5173 | Backend: http://localhost:3001
 
+## Documentation
+
+- [AI Signal Generation Guide](https://fun.stockyai.xyz/ai.md)
+- [System Architecture](https://fun.stockyai.xyz/architecture.md)
+- [LLM Integration Guide](https://fun.stockyai.xyz/llm.md)
+
 ## Live Site
 
 https://fun.stockyai.xyz
+
+## Blog
+
+https://www.charandeepkapoor.com/blog/stocky-ai
 
 ## License
 
