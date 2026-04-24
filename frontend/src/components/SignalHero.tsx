@@ -2,12 +2,17 @@ import { TrendingUp, TrendingDown, Minus, Sparkles, ArrowDown } from 'lucide-rea
 import { useTradingContext } from '../context/TradingContext';
 import { displayBase } from '../lib/products';
 
-// Best-effort regex pluck of Entry/Stop/Target/R:R from the AI's action sentence.
-function parsePlan(action: string): { entry?: string; stop?: string; target?: string; rr?: string } | null {
+const fmtPrice = (n: number) =>
+  `$${n.toLocaleString(undefined, { maximumFractionDigits: n >= 100 ? 2 : 4 })}`;
+
+// Fallback: best-effort regex pluck of Entry/Stop/Target/R:R from an action sentence.
+// Price values are returned with a leading "$" so the hero tile just renders them.
+function parsePlanFromAction(action: string): { entry?: string; stop?: string; target?: string; rr?: string } | null {
   const grab = (re: RegExp): string | undefined => action.match(re)?.[1];
-  const entry  = grab(/entry[:\s]+\$?([\d,]+(?:\.\d+)?)/i);
-  const stop   = grab(/stop(?:[-\s]?loss)?[:\s]+\$?([\d,]+(?:\.\d+)?)/i);
-  const target = grab(/target[:\s]+\$?([\d,]+(?:\.\d+)?)/i);
+  const priced = (s?: string) => (s ? `$${s}` : undefined);
+  const entry  = priced(grab(/entry[:\s]+\$?([\d,]+(?:\.\d+)?)/i));
+  const stop   = priced(grab(/stop(?:[-\s]?loss)?[:\s]+\$?([\d,]+(?:\.\d+)?)/i));
+  const target = priced(grab(/target[:\s]+\$?([\d,]+(?:\.\d+)?)/i));
   const rr     = grab(/R[:\s]*R\s*[:≈=]?\s*([\d.]+\s*:\s*[\d.]+|[\d.]+)/i);
   if (!entry && !stop && !target && !rr) return null;
   return { entry, stop, target, rr };
@@ -53,7 +58,7 @@ export default function SignalHero() {
 
   if (!lastSignal) return null;
 
-  const { signal, prediction, confidence, action } = lastSignal;
+  const { signal, prediction, confidence, action, plan: structuredPlan } = lastSignal;
 
   const tone =
     signal === 'buy'
@@ -93,7 +98,17 @@ export default function SignalHero() {
     document.getElementById('order-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const plan = action && signal !== 'hold' ? parsePlan(action) : null;
+  // Prefer the structured plan from the AI; fall back to regex-parsing the action text.
+  const plan: { entry?: string; stop?: string; target?: string; rr?: string } | null = structuredPlan
+    ? {
+        entry: fmtPrice(structuredPlan.entry),
+        stop: fmtPrice(structuredPlan.stop),
+        target: fmtPrice(structuredPlan.target),
+        rr: structuredPlan.rr,
+      }
+    : action
+      ? parsePlanFromAction(action)
+      : null;
 
   return (
     <div className={`rounded-2xl border-2 ${tone.bg} ${tone.border} p-lg shadow-xl animate-fade-in`}>
@@ -131,13 +146,13 @@ export default function SignalHero() {
       {plan && (
         <div className="mt-md grid grid-cols-2 gap-xs">
           {plan.entry && (
-            <PlanTile label="Entry" value={`$${plan.entry}`} valueClass={tone.accent} borderClass={tone.tileBorder} />
+            <PlanTile label="Entry" value={plan.entry} valueClass={tone.accent} borderClass={tone.tileBorder} />
           )}
           {plan.stop && (
-            <PlanTile label="Stop" value={`$${plan.stop}`} valueClass="text-negative" borderClass={tone.tileBorder} />
+            <PlanTile label="Stop" value={plan.stop} valueClass="text-negative" borderClass={tone.tileBorder} />
           )}
           {plan.target && (
-            <PlanTile label="Target" value={`$${plan.target}`} valueClass="text-positive" borderClass={tone.tileBorder} />
+            <PlanTile label="Target" value={plan.target} valueClass="text-positive" borderClass={tone.tileBorder} />
           )}
           {plan.rr && (
             <PlanTile label="R:R" value={plan.rr} valueClass={tone.accent} borderClass={tone.tileBorder} />

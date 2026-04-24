@@ -30,6 +30,14 @@ export interface TASummary {
   signalScore: number;
 }
 
+export interface TradePlan {
+  entry: number;
+  stop: number;
+  target: number;
+  rr: string;
+  note?: string;
+}
+
 export interface AnalysisResponse {
   prediction: 'up' | 'down';
   confidence: number;
@@ -37,6 +45,7 @@ export interface AnalysisResponse {
   rationale: string;
   keyLevels?: string;
   action?: string;
+  plan?: TradePlan;
   risk?: string;
   thinking?: string;
   confidenceBreakdown?: ConfidenceBreakdown;

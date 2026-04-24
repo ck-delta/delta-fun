@@ -11,6 +11,14 @@ export interface ConfidenceBreakdown {
   confluence: string;
 }
 
+export interface TradePlan {
+  entry: number;
+  stop: number;
+  target: number;
+  rr: string;    // e.g. "1.3:1"
+  note?: string; // short guardrail, e.g. "wait for 5m close below 77580"
+}
+
 export interface AnalysisResult {
   prediction: 'up' | 'down';
   confidence: number;       // 0–1
@@ -18,6 +26,7 @@ export interface AnalysisResult {
   rationale: string;
   keyLevels?: string;
   action?: string;
+  plan?: TradePlan;
   risk?: string;
   thinking?: string;
   confidenceBreakdown?: ConfidenceBreakdown;
@@ -59,11 +68,20 @@ Output ONLY valid JSON with this exact shape:
   "signal": "buy" | "sell" | "hold",
   "rationale": "<3-4 sentences, <110 words, cite exact values>",
   "keyLevels": "<support $X, resistance $Y, EMA200 $Z>",
-  "action": "<MUST start with 'Entry: $X; Stop: $Y; Target: $Z; R:R N:1' then a short note — or for HOLD, 'Wait for <condition>'>",
-  "risk": "<MAX 16 words. Single invalidation condition with a price.>"
+  "plan": {
+    "entry":  <number, current or prospective entry price>,
+    "stop":   <number, hard stop price>,
+    "target": <number, take-profit price>,
+    "rr":     "<e.g. '1.5:1' — always reward:risk as a string>",
+    "note":   "<optional ≤12-word guardrail, e.g. 'wait for 5m close below 77580'>"
+  },
+  "action": "<MAX 18 words. Plain-English instruction. For HOLD, describe the exact trigger that flips to the plan above.>",
+  "risk":   "<MAX 16 words. Single invalidation condition with a price.>"
 }
 
-IMPORTANT: confidenceBreakdown values MUST be terse phrases (≤12 words each), not full sentences. Numbers stay, filler goes.
+IMPORTANT:
+ - confidenceBreakdown values MUST be terse phrases (≤12 words each), not full sentences. Numbers stay, filler goes.
+ - "plan" MUST be filled with numeric values even for HOLD — in that case, give the prospective plan for whichever side has a directional lean. Never return null/undefined for entry/stop/target.
 
 Return only JSON. No prose outside JSON.`;
 }
@@ -149,6 +167,18 @@ export async function analyzeWithOpenRouter(
   const breakdown = parsed.confidenceBreakdown as Partial<ConfidenceBreakdown> | undefined;
   const validSignals = ['buy', 'sell', 'hold'] as const;
 
+  const rawPlan = parsed.plan as Partial<TradePlan> | undefined;
+  const plan: TradePlan | undefined =
+    rawPlan && Number.isFinite(Number(rawPlan.entry)) && Number.isFinite(Number(rawPlan.stop)) && Number.isFinite(Number(rawPlan.target))
+      ? {
+          entry: Number(rawPlan.entry),
+          stop: Number(rawPlan.stop),
+          target: Number(rawPlan.target),
+          rr: typeof rawPlan.rr === 'string' ? rawPlan.rr : String(rawPlan.rr ?? ''),
+          note: typeof rawPlan.note === 'string' ? rawPlan.note : undefined,
+        }
+      : undefined;
+
   return {
     prediction: parsed.prediction === 'down' ? 'down' : 'up',
     confidence: Math.max(0, Math.min(1, Number(parsed.confidence) || 0.5)),
@@ -158,6 +188,7 @@ export async function analyzeWithOpenRouter(
     rationale: (parsed.rationale as string) ?? 'Analysis inconclusive.',
     keyLevels: parsed.keyLevels as string | undefined,
     action: parsed.action as string | undefined,
+    plan,
     risk: parsed.risk as string | undefined,
     thinking: parsed.thinking as string | undefined,
     confidenceBreakdown: breakdown && {
