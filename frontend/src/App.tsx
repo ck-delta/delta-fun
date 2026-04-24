@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { TradingProvider, useTradingContext } from './context/TradingContext';
 import { useDeltaCandles } from './hooks/useDeltaCandles';
 import { useAnalysis } from './hooks/useAnalysis';
+import { DEMO_SIGNALS, readDemoFromUrl } from './lib/demoSignal';
 import AssetSearch from './components/AssetSearch';
 import PriceHeader from './components/PriceHeader';
 import DeltaChart from './components/DeltaChart';
@@ -13,17 +14,29 @@ import PositionsList from './components/PositionsList';
 import Toast from './components/Toast';
 
 function AppBody() {
-  const { selectedSymbol, setLivePrice, lastSignal, tradesVersion } = useTradingContext();
+  const {
+    selectedSymbol, setSelectedSymbol, setLivePrice, lastSignal, setLastSignal, tradesVersion,
+  } = useTradingContext();
   const { candles, lastPrice } = useDeltaCandles(selectedSymbol, '5m');
   const { analyze } = useAnalysis();
+  const demoKey = useRef(readDemoFromUrl()).current;
 
   // Pipe WS price → context
   useEffect(() => {
     setLivePrice(lastPrice);
   }, [lastPrice, setLivePrice]);
 
-  // Auto-trigger AI on asset change (and once on first mount)
+  // Apply demo override (once, before first analyze)
   useEffect(() => {
+    if (!demoKey) return;
+    const { symbol, signal } = DEMO_SIGNALS[demoKey];
+    setSelectedSymbol(symbol);
+    setLastSignal(signal);
+  }, [demoKey, setSelectedSymbol, setLastSignal]);
+
+  // Auto-trigger AI on asset change (skip entirely in demo mode)
+  useEffect(() => {
+    if (demoKey) return;
     analyze(selectedSymbol);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSymbol]);
