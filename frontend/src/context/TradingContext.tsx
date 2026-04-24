@@ -1,77 +1,57 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
-import type { AnalysisResponse, CritiqueResponse } from '../lib/api';
-import type { CoinKey } from '../lib/coins';
+import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
+import type { AnalysisResponse } from '../lib/api';
+
+interface ToastState { id: number; message: string; type: 'success' | 'error' | 'info' }
 
 interface TradingContextValue {
-  lastSignal: AnalysisResponse | null;
-  setLastSignal: (s: AnalysisResponse | null) => void;
-  tradesVersion: number;
-  bumpTradesVersion: () => void;
-  isAnalyzing: boolean;
-  setIsAnalyzing: (v: boolean) => void;
-  overshootStatus: 'idle' | 'active' | 'error';
-  setOvershootStatus: (s: 'idle' | 'active' | 'error') => void;
-  startVision: () => void;
-  setStartVision: (fn: () => void) => void;
-  lastOvershootSnapshot: string | undefined;
-  setLastOvershootSnapshot: (v: string | undefined) => void;
-  analysisTimestamp: number | null;
-  setAnalysisTimestamp: (v: number | null) => void;
-  toast: { message: string; type: 'success' | 'error' } | null;
-  showToast: (message: string, type?: 'success' | 'error') => void;
-  chartFocusMode: boolean;
-  setChartFocusMode: (v: boolean) => void;
-  selectedCoin: CoinKey;
-  setSelectedCoin: (coin: CoinKey) => void;
+  selectedSymbol: string;
+  setSelectedSymbol: (s: string) => void;
+
   livePrice: number | null;
   setLivePrice: (p: number | null) => void;
-  critiqueResult: CritiqueResponse | null;
-  setCritiqueResult: (v: CritiqueResponse | null) => void;
-  isCritiquing: boolean;
-  setIsCritiquing: (v: boolean) => void;
+
+  lastSignal: AnalysisResponse | null;
+  setLastSignal: (s: AnalysisResponse | null) => void;
+  isAnalyzing: boolean;
+  setIsAnalyzing: (v: boolean) => void;
+  analysisError: string | null;
+  setAnalysisError: (v: string | null) => void;
+
+  tradesVersion: number;
+  bumpTrades: () => void;
+
+  toast: ToastState | null;
+  showToast: (message: string, type?: ToastState['type']) => void;
 }
 
 const TradingContext = createContext<TradingContextValue | null>(null);
 
 export function TradingProvider({ children }: { children: React.ReactNode }) {
-  const [lastSignal, setLastSignal] = useState<AnalysisResponse | null>(null);
-  const [tradesVersion, setTradesVersion] = useState(0);
-  const bumpTradesVersion = useCallback(() => setTradesVersion(v => v + 1), []);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [overshootStatus, setOvershootStatus] = useState<'idle' | 'active' | 'error'>('idle');
-  const [startVision, setStartVisionFn] = useState<() => void>(() => () => {});
-  const setStartVision = useCallback((fn: () => void) => setStartVisionFn(() => fn), []);
-  const [lastOvershootSnapshot, setLastOvershootSnapshot] = useState<string | undefined>(undefined);
-  const [analysisTimestamp, setAnalysisTimestamp] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [chartFocusMode, setChartFocusMode] = useState(false);
-  const [selectedCoin, setSelectedCoin] = useState<CoinKey>('BTC');
+  const [selectedSymbol, setSelectedSymbol] = useState<string>('BTCUSD');
   const [livePrice, setLivePrice] = useState<number | null>(null);
-  const [critiqueResult, setCritiqueResult] = useState<CritiqueResponse | null>(null);
-  const [isCritiquing, setIsCritiquing] = useState(false);
+  const [lastSignal, setLastSignal] = useState<AnalysisResponse | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [tradesVersion, setTradesVersion] = useState(0);
+  const bumpTrades = useCallback(() => setTradesVersion(v => v + 1), []);
 
-  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ message, type });
-    toastTimerRef.current = setTimeout(() => setToast(null), 3500);
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((message: string, type: ToastState['type'] = 'info') => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ id: Date.now(), message, type });
+    toastTimer.current = setTimeout(() => setToast(null), 3200);
   }, []);
 
   return (
     <TradingContext.Provider value={{
-      lastSignal, setLastSignal,
-      tradesVersion, bumpTradesVersion,
-      isAnalyzing, setIsAnalyzing,
-      overshootStatus, setOvershootStatus,
-      startVision, setStartVision,
-      lastOvershootSnapshot, setLastOvershootSnapshot,
-      analysisTimestamp, setAnalysisTimestamp,
-      toast, showToast,
-      chartFocusMode, setChartFocusMode,
-      selectedCoin, setSelectedCoin,
+      selectedSymbol, setSelectedSymbol,
       livePrice, setLivePrice,
-      critiqueResult, setCritiqueResult,
-      isCritiquing, setIsCritiquing,
+      lastSignal, setLastSignal,
+      isAnalyzing, setIsAnalyzing,
+      analysisError, setAnalysisError,
+      tradesVersion, bumpTrades,
+      toast, showToast,
     }}>
       {children}
     </TradingContext.Provider>

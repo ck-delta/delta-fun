@@ -1,33 +1,24 @@
 import { useCallback } from 'react';
 import { api } from '../lib/api';
 import { useTradingContext } from '../context/TradingContext';
-import { overshootStore } from '../lib/overshootStore';
-import { COINS } from '../lib/coins';
 
 export function useAnalysis() {
-  const { setLastSignal, setIsAnalyzing, setLastOvershootSnapshot, setAnalysisTimestamp, showToast, selectedCoin } = useTradingContext();
+  const { setLastSignal, setIsAnalyzing, setAnalysisError, showToast } = useTradingContext();
 
-  const analyze = useCallback(async (prompt: string) => {
-    if (!prompt.trim()) return;
-
-    // Snapshot at submit time from the module store — no stale closure, no re-render dependency
-    const overshootSnapshot = overshootStore.latestResult;
-    const coin = COINS[selectedCoin];
-
+  const analyze = useCallback(async (symbol: string, prompt?: string) => {
     setIsAnalyzing(true);
+    setAnalysisError(null);
     try {
-      const result = await api.analyze(prompt, coin.id, coin.symbol, overshootSnapshot);
+      const result = await api.analyze(symbol, prompt);
       setLastSignal(result);
-      setAnalysisTimestamp(Date.now());
-      setLastOvershootSnapshot(overshootSnapshot);
     } catch (err) {
-      console.error('[analysis]', err);
-      showToast(`Analysis failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
+      const msg = err instanceof Error ? err.message : String(err);
+      setAnalysisError(msg);
+      showToast(`Analysis failed: ${msg}`, 'error');
     } finally {
       setIsAnalyzing(false);
     }
-  // overshootStore is a module ref, not React state — selectedCoin included in deps
-  }, [setLastSignal, setIsAnalyzing, setLastOvershootSnapshot, setAnalysisTimestamp, showToast, selectedCoin]);
+  }, [setLastSignal, setIsAnalyzing, setAnalysisError, showToast]);
 
   return { analyze };
 }

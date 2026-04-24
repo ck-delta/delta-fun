@@ -1,25 +1,44 @@
 import { Router, Request, Response } from 'express';
-import { fetchOHLC, fetchCurrentPrice } from '../services/coingecko';
+import { fetchProducts, fetchCandles, fetchTicker } from '../services/delta';
 
 const router = Router();
 
-router.get('/ohlc', async (req: Request, res: Response) => {
-  const coinId = (req.query.coin as string) ?? 'bitcoin';
+router.get('/products', async (_req: Request, res: Response) => {
   try {
-    const candles = await fetchOHLC(coinId, 1);
-    res.json({ candles });
+    const products = await fetchProducts();
+    // Trim payload — the UI only needs a compact subset.
+    const compact = products.map(p => ({
+      id: p.id,
+      symbol: p.symbol,
+      description: p.description,
+      contract_type: p.contract_type,
+      underlying: p.underlying_asset?.symbol ?? '',
+      quoting: p.quoting_asset?.symbol ?? '',
+    }));
+    res.json({ products: compact });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch OHLC', detail: String(err) });
+    res.status(500).json({ error: 'Failed to fetch products', detail: String(err) });
   }
 });
 
-router.get('/price', async (req: Request, res: Response) => {
-  const coinId = (req.query.coin as string) ?? 'bitcoin';
+router.get('/candles', async (req: Request, res: Response) => {
+  const symbol = (req.query.symbol as string) ?? 'BTCUSD';
+  const resolution = (req.query.resolution as string) ?? '5m';
   try {
-    const price = await fetchCurrentPrice(coinId);
-    res.json({ price });
+    const candles = await fetchCandles(symbol, resolution);
+    res.json({ candles });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch price', detail: String(err) });
+    res.status(500).json({ error: 'Failed to fetch candles', detail: String(err) });
+  }
+});
+
+router.get('/ticker', async (req: Request, res: Response) => {
+  const symbol = (req.query.symbol as string) ?? 'BTCUSD';
+  try {
+    const ticker = await fetchTicker(symbol);
+    res.json(ticker);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch ticker', detail: String(err) });
   }
 });
 

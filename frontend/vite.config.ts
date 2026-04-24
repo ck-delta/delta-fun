@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   plugins: [
@@ -11,19 +11,11 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\.coingecko\.com\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'coingecko-api',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 },
-            },
-          },
-          {
             urlPattern: /\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'app-api',
-              expiration: { maxEntries: 50, maxAgeSeconds: 300 },
+              cacheName: 'delta-fun-api',
+              expiration: { maxEntries: 50, maxAgeSeconds: 120 },
             },
           },
           {
@@ -42,40 +34,20 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'Stocky Fun — AI Crypto Trading',
-        short_name: 'Stocky Fun',
-        description: 'AI-powered crypto trading dashboard with real-time charts and paper trading',
+        name: 'delta-fun — Paper Perps on Delta',
+        short_name: 'delta-fun',
+        description: 'Mobile-first 10× paper trading on Delta Exchange perpetuals, powered by AI signals.',
         start_url: '/',
         display: 'standalone',
         orientation: 'portrait-primary',
-        theme_color: '#050505',
-        background_color: '#050505',
+        theme_color: '#111114',
+        background_color: '#111114',
         categories: ['finance', 'utilities'],
         icons: [
-          {
-            src: '/favicon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any',
-          },
-          {
-            src: '/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any',
-          },
-          {
-            src: '/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any',
-          },
-          {
-            src: '/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable',
-          },
+          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
     }),
@@ -84,13 +56,18 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'overshoot-deps': ['overshoot'],
           'chart-deps': ['lightweight-charts'],
-          'motion-deps': ['framer-motion'],
-          'scroll-deps': ['lenis', '@tanstack/react-virtual'],
         },
       },
     },
     chunkSizeWarningLimit: 600,
   },
-})
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
+});

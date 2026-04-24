@@ -1,17 +1,16 @@
 {
-  "name": "stocky-fun",
-  "version": "1.0.0",
+  "name": "delta-fun",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
     "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
-    "install:all": "npm install --prefix frontend && npm install --prefix backend"
+    "install:all": "npm install && npm install --prefix frontend && npm install --prefix backend"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "groq-sdk": "^0.11.0"
+    "express": "^4.21.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
