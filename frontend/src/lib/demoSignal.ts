@@ -72,6 +72,8 @@ export const DEMO_SIGNALS: Record<DemoKey, { symbol: string; signal: AnalysisRes
 
 export function readDemoFromUrl(): DemoKey | null {
   if (typeof window === 'undefined') return null;
+  // Dev-only: the override is stripped from production bundles.
+  if (!import.meta.env.DEV) return null;
   const v = new URL(window.location.href).searchParams.get('demo');
   if (!v) return null;
   const k = v.toLowerCase().replace(/[- ]/g, '_') as DemoKey;
