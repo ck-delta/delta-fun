@@ -2,11 +2,94 @@ import { TrendingUp, TrendingDown, Minus, Sparkles, ArrowDown } from 'lucide-rea
 import { useTradingContext } from '../context/TradingContext';
 import { displayBase } from '../lib/products';
 
+type StateKey = 'STRONG_BUY' | 'BUY' | 'NEUTRAL' | 'SELL' | 'STRONG_SELL';
+
+// Classify the AI signal into a 5-state label using signal + confidence.
+function classify(signal: 'buy' | 'sell' | 'hold', confidence: number): StateKey {
+  if (signal === 'buy')  return confidence >= 0.8 ? 'STRONG_BUY'  : 'BUY';
+  if (signal === 'sell') return confidence >= 0.8 ? 'STRONG_SELL' : 'SELL';
+  return 'NEUTRAL';
+}
+
+interface StateTone {
+  bg: string;
+  border: string;
+  accent: string;
+  tileBorder: string;
+  confBar: string;
+  ctaBg: string;
+  ctaLabel: (asset: string) => string;
+  label: string;
+  Icon: typeof TrendingUp;
+  prefix?: string; // e.g. "↑↑" for STRONG_BUY
+}
+
+const TONE: Record<StateKey, StateTone> = {
+  STRONG_BUY: {
+    bg: 'bg-positive-muted',
+    border: 'border-positive',
+    accent: 'text-positive',
+    tileBorder: 'border-positive/15',
+    confBar: 'bg-positive',
+    ctaBg: 'bg-positive hover:brightness-110 text-white',
+    ctaLabel: (a) => `Trade now · Long ${a} 10×`,
+    label: 'Strong Buy',
+    Icon: TrendingUp,
+    prefix: '↑↑',
+  },
+  BUY: {
+    bg: 'bg-positive-muted',
+    border: 'border-positive/40',
+    accent: 'text-positive',
+    tileBorder: 'border-positive/15',
+    confBar: 'bg-positive',
+    ctaBg: 'bg-positive hover:brightness-110 text-white',
+    ctaLabel: (a) => `Trade now · Long ${a} 10×`,
+    label: 'Buy',
+    Icon: TrendingUp,
+    prefix: '↑',
+  },
+  NEUTRAL: {
+    bg: 'bg-warning-muted',
+    border: 'border-warning/40',
+    accent: 'text-warning',
+    tileBorder: 'border-warning/15',
+    confBar: 'bg-warning',
+    ctaBg: 'bg-brand hover:bg-brand-hover text-white',
+    ctaLabel: (a) => `Open order ticket · ${a}`,
+    label: 'Neutral',
+    Icon: Minus,
+  },
+  SELL: {
+    bg: 'bg-negative-muted',
+    border: 'border-negative/40',
+    accent: 'text-negative',
+    tileBorder: 'border-negative/15',
+    confBar: 'bg-negative',
+    ctaBg: 'bg-negative hover:brightness-110 text-white',
+    ctaLabel: (a) => `Trade now · Short ${a} 10×`,
+    label: 'Sell',
+    Icon: TrendingDown,
+    prefix: '↓',
+  },
+  STRONG_SELL: {
+    bg: 'bg-negative-muted',
+    border: 'border-negative',
+    accent: 'text-negative',
+    tileBorder: 'border-negative/15',
+    confBar: 'bg-negative',
+    ctaBg: 'bg-negative hover:brightness-110 text-white',
+    ctaLabel: (a) => `Trade now · Short ${a} 10×`,
+    label: 'Strong Sell',
+    Icon: TrendingDown,
+    prefix: '↓↓',
+  },
+};
+
 const fmtPrice = (n: number) =>
   `$${n.toLocaleString(undefined, { maximumFractionDigits: n >= 100 ? 2 : 4 })}`;
 
 // Fallback: best-effort regex pluck of Entry/Stop/Target/R:R from an action sentence.
-// Price values are returned with a leading "$" so the hero tile just renders them.
 function parsePlanFromAction(action: string): { entry?: string; stop?: string; target?: string; rr?: string } | null {
   const grab = (re: RegExp): string | undefined => action.match(re)?.[1];
   const priced = (s?: string) => (s ? `$${s}` : undefined);
@@ -58,47 +141,16 @@ export default function SignalHero() {
 
   if (!lastSignal) return null;
 
-  const { signal, prediction, confidence, action, plan: structuredPlan } = lastSignal;
-
-  const tone =
-    signal === 'buy'
-      ? {
-          bg: 'bg-positive-muted',
-          border: 'border-positive/40',
-          tileBorder: 'border-positive/15',
-          pill: 'bg-positive text-white',
-          accent: 'text-positive',
-          label: 'BUY',
-          Icon: TrendingUp,
-        }
-      : signal === 'sell'
-        ? {
-            bg: 'bg-negative-muted',
-            border: 'border-negative/40',
-            tileBorder: 'border-negative/15',
-            pill: 'bg-negative text-white',
-            accent: 'text-negative',
-            label: 'SELL',
-            Icon: TrendingDown,
-          }
-        : {
-            bg: 'bg-warning-muted',
-            border: 'border-warning/40',
-            tileBorder: 'border-warning/15',
-            pill: 'bg-warning text-grey-700',
-            accent: 'text-warning',
-            label: 'HOLD',
-            Icon: Minus,
-          };
+  const { signal, confidence, action, plan: structuredPlan } = lastSignal;
+  const state = classify(signal, confidence);
+  const tone = TONE[state];
 
   const confPct = Math.round(confidence * 100);
-  const confTone = confPct >= 70 ? 'bg-positive' : confPct >= 55 ? 'bg-warning' : 'bg-negative';
 
   const scrollToOrder = () => {
     document.getElementById('order-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  // Prefer the structured plan from the AI; fall back to regex-parsing the action text.
   const plan: { entry?: string; stop?: string; target?: string; rr?: string } | null = structuredPlan
     ? {
         entry: fmtPrice(structuredPlan.entry),
@@ -110,35 +162,32 @@ export default function SignalHero() {
       ? parsePlanFromAction(action)
       : null;
 
+  const asset = displayBase(selectedSymbol);
+
   return (
     <div className={`rounded-2xl border-2 ${tone.bg} ${tone.border} p-lg shadow-xl animate-fade-in`}>
-      {/* Top strip: label + pill */}
-      <div className="flex items-center justify-between mb-md">
-        <div className="flex items-center gap-sm">
-          <Sparkles size={14} className={tone.accent} />
-          <span className="text-[10px] uppercase tracking-widest font-bold text-fg-secondary">AI Signal</span>
-        </div>
-        <span className={`flex items-center gap-2xs px-md py-xs rounded-pill text-xs font-bold uppercase tracking-wider ${tone.pill} shadow-md`}>
-          <tone.Icon size={14} strokeWidth={3} />
+      {/* Top strip: AI Signal label */}
+      <div className="flex items-center gap-sm mb-md">
+        <Sparkles size={14} className={tone.accent} />
+        <span className="text-[10px] uppercase tracking-widest font-bold text-fg-secondary">AI Signal</span>
+      </div>
+
+      {/* Big state label */}
+      <div className="flex items-baseline gap-sm mb-md">
+        <tone.Icon size={32} className={tone.accent} strokeWidth={3} />
+        <span className={`text-3xl sm:text-4xl font-extrabold tracking-tight uppercase leading-none ${tone.accent}`}>
           {tone.label}
         </span>
       </div>
 
-      {/* Direction — hero */}
-      <div className="mb-md">
-        <span className={`text-4xl font-extrabold font-mono tracking-tight ${tone.accent}`}>
-          {prediction === 'up' ? '↑ UP' : '↓ DOWN'}
-        </span>
-      </div>
-
-      {/* Confidence — larger bar */}
+      {/* Confidence bar */}
       <div>
         <div className="flex justify-between text-[11px] mb-xs">
           <span className="uppercase tracking-wider font-semibold text-fg-secondary">Confidence</span>
           <span className={`font-mono font-bold ${tone.accent}`}>{confPct}%</span>
         </div>
         <div className="h-[10px] rounded-pill bg-bg-sub-surface overflow-hidden">
-          <div className={`h-full ${confTone} transition-all duration-500`} style={{ width: `${confPct}%` }} />
+          <div className={`h-full ${tone.confBar} transition-all duration-500`} style={{ width: `${confPct}%` }} />
         </div>
       </div>
 
@@ -160,16 +209,14 @@ export default function SignalHero() {
         </div>
       )}
 
-      {/* CTA — strongest button on the page */}
-      {signal !== 'hold' && (
-        <button
-          onClick={scrollToOrder}
-          className={`mt-md w-full flex items-center justify-center gap-xs px-md py-md rounded-lg text-sm font-bold uppercase tracking-wider shadow-lg transition-transform active:scale-[0.98] ${tone.pill} hover:brightness-110`}
-        >
-          <ArrowDown size={14} strokeWidth={3} />
-          Trade now · {signal === 'buy' ? 'Long' : 'Short'} {displayBase(selectedSymbol)} 10×
-        </button>
-      )}
+      {/* CTA — always present */}
+      <button
+        onClick={scrollToOrder}
+        className={`mt-md w-full flex items-center justify-center gap-xs px-md py-md rounded-lg text-sm font-bold uppercase tracking-wider shadow-lg transition-transform active:scale-[0.98] ${tone.ctaBg}`}
+      >
+        <ArrowDown size={14} strokeWidth={3} />
+        {tone.ctaLabel(asset)}
+      </button>
     </div>
   );
 }
