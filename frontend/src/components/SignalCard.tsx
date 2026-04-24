@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import {
-  TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp,
-  Zap, AlertTriangle, Sparkles, ArrowDown,
+  TrendingUp, ChevronDown, ChevronUp,
+  Zap, AlertTriangle, ArrowDown,
   Activity, BarChart3, Layers, Target,
 } from 'lucide-react';
 import { useTradingContext } from '../context/TradingContext';
-import { displayBase } from '../lib/products';
 import type { ConfidenceBreakdown } from '../lib/api';
 
 // Best-effort regex pluck of Entry/Stop/Target/R:R from the AI's action sentence.
@@ -54,55 +53,15 @@ function PillarCard({ k, text }: { k: keyof ConfidenceBreakdown; text: string })
 }
 
 export default function SignalCard() {
-  const { lastSignal, isAnalyzing, analysisError, selectedSymbol } = useTradingContext();
+  const { lastSignal } = useTradingContext();
   const [showRationale, setShowRationale] = useState(false);
 
-  if (isAnalyzing) {
-    return (
-      <div className="rounded-xl bg-bg-surface-alt border border-divider p-lg animate-pulse">
-        <div className="flex items-center gap-sm text-fg-secondary">
-          <Sparkles size={14} className="text-brand-text" />
-          <span className="text-xs uppercase tracking-wide">Analysing {displayBase(selectedSymbol)}…</span>
-        </div>
-        <div className="mt-md grid grid-cols-3 gap-xs">
-          {[0, 1, 2].map(i => <div key={i} className="h-[46px] rounded-md bg-bg-primary" />)}
-        </div>
-        <div className="mt-xs grid grid-cols-2 gap-xs">
-          {[0, 1, 2, 3].map(i => <div key={i} className="h-[48px] rounded-md bg-bg-primary" />)}
-        </div>
-      </div>
-    );
-  }
+  // Hero (signal + direction + confidence) now lives in SignalHero.
+  // This card holds the supporting detail: key levels, pillars, plan, risk, rationale.
+  if (!lastSignal) return null;
 
-  if (analysisError && !lastSignal) {
-    return (
-      <div className="rounded-xl bg-negative-muted border border-negative/40 p-lg">
-        <p className="text-sm text-negative-text font-medium">AI signal unavailable</p>
-        <p className="text-xs text-fg-tertiary mt-xs">{analysisError}</p>
-      </div>
-    );
-  }
-
-  if (!lastSignal) {
-    return (
-      <div className="rounded-xl bg-bg-surface-alt border border-divider p-lg">
-        <p className="text-sm text-fg-tertiary">Select an asset to generate an AI signal.</p>
-      </div>
-    );
-  }
-
-  const { signal, prediction, confidence, rationale, action, risk, ta, confidenceBreakdown } = lastSignal;
+  const { signal, rationale, action, risk, ta, confidenceBreakdown } = lastSignal;
   const isHold = signal === 'hold';
-
-  const sideTone =
-    signal === 'buy'
-      ? { label: 'BUY',  cls: 'bg-positive-muted text-positive border-positive/40', Icon: TrendingUp }
-      : signal === 'sell'
-        ? { label: 'SELL', cls: 'bg-negative-muted text-negative border-negative/40', Icon: TrendingDown }
-        : { label: 'HOLD', cls: 'bg-warning-muted text-warning border-warning/40', Icon: Minus };
-
-  const confPct = Math.round(confidence * 100);
-  const confTone = confPct >= 70 ? 'bg-positive' : confPct >= 55 ? 'bg-warning' : 'bg-negative';
 
   const fmt = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
@@ -112,41 +71,8 @@ export default function SignalCard() {
 
   return (
     <div className="rounded-xl bg-bg-surface-alt border border-divider p-lg animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-sm">
-        <div className="flex items-center gap-sm">
-          <span className="section-label">AI signal</span>
-          <span className="text-[10px] text-fg-tertiary">· Sonnet 4.6</span>
-        </div>
-        <span className={`flex items-center gap-2xs px-sm py-2xs rounded-pill border text-xs font-semibold uppercase tracking-wide ${sideTone.cls}`}>
-          <sideTone.Icon size={12} />
-          {sideTone.label}
-        </span>
-      </div>
-
-      {/* Big direction */}
-      <div className="flex items-baseline gap-sm">
-        <span className={`text-2xl font-bold font-mono ${prediction === 'up' ? 'text-positive' : 'text-negative'}`}>
-          {prediction === 'up' ? '↑ UP' : '↓ DOWN'}
-        </span>
-        <span className="text-[11px] text-fg-tertiary uppercase tracking-wide">
-          <b className="text-fg-secondary">{ta.trendBias}</b> · score <b className="text-fg-secondary font-mono">{ta.signalScore >= 0 ? '+' : ''}{ta.signalScore}</b>
-        </span>
-      </div>
-
-      {/* Confidence */}
-      <div className="mt-md">
-        <div className="flex justify-between text-[11px] mb-2xs">
-          <span className="uppercase tracking-wide text-fg-tertiary">Confidence</span>
-          <span className="font-mono font-semibold text-fg-primary">{confPct}%</span>
-        </div>
-        <div className="h-[6px] rounded-pill bg-bg-primary overflow-hidden">
-          <div className={`h-full ${confTone} transition-all duration-500`} style={{ width: `${confPct}%` }} />
-        </div>
-      </div>
-
       {/* Key levels — 3 pills */}
-      <div className="mt-md flex gap-xs">
+      <div className="flex gap-xs">
         <KeyPill label="Support" value={fmt(ta.support)} />
         <KeyPill label="Resist" value={fmt(ta.resistance)} />
         <KeyPill label="EMA200" value={fmt(ta.ema200)} />

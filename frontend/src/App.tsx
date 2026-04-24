@@ -6,6 +6,7 @@ import AssetSearch from './components/AssetSearch';
 import PriceHeader from './components/PriceHeader';
 import DeltaChart from './components/DeltaChart';
 import IndicatorsStrip from './components/IndicatorsStrip';
+import SignalHero from './components/SignalHero';
 import SignalCard from './components/SignalCard';
 import OrderForm from './components/OrderForm';
 import PositionsList from './components/PositionsList';
@@ -56,6 +57,7 @@ function AppBody() {
 
         <IndicatorsStrip ta={ta} />
 
+        <SignalHero />
         <SignalCard />
         <OrderForm />
 
