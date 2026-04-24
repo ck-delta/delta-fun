@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   Sparkles, ArrowDown, ChevronDown, ChevronUp,
   Activity, BarChart3, Layers, TrendingUp, AlertTriangle,
@@ -89,6 +89,25 @@ function parsePlanFromAction(action: string): { entry?: string; stop?: string; t
   return { entry, stop, target, rr };
 }
 
+// Wrap numeric facts ($3,220, 78%, +2.3, 58) in bold so the eye skims them first.
+function emphasise(text: string, strongClass = 'text-fg-primary'): ReactNode[] {
+  const re = /(\$\d[\d,]*(?:\.\d+)?|[+-]?\d+(?:\.\d+)?%?)/g;
+  const out: ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    out.push(
+      <strong key={m.index} className={`font-bold ${strongClass}`}>
+        {m[0]}
+      </strong>,
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
 function PlanTile({
   label, value, valueClass, borderClass,
 }: {
@@ -139,7 +158,7 @@ export default function SignalHero() {
   if (!lastSignal) return null;
 
   const {
-    signal, confidence, action, rationale, risk, confidenceBreakdown,
+    signal, confidence, action, risk, confidenceBreakdown,
     plan: structuredPlan,
   } = lastSignal;
   const state = classify(signal, confidence);
@@ -229,10 +248,18 @@ export default function SignalHero() {
 
         {showLogic && (
           <div className="mt-md space-y-sm animate-fade-in">
-            {rationale && (
-              <p className="text-[12px] leading-relaxed text-fg-primary/90">{rationale}</p>
+            {/* Invalidates if — leads the reasoning */}
+            {risk && (
+              <div className="flex items-start gap-xs p-sm rounded-md bg-warning-muted/50 border border-warning/30">
+                <AlertTriangle size={12} className="text-warning-text flex-shrink-0 mt-[2px]" />
+                <div className="min-w-0">
+                  <div className="text-[9px] uppercase tracking-wider text-warning-text/80 font-bold">Invalidates if</div>
+                  <div className="text-[12px] text-warning-text leading-snug">{emphasise(risk, 'text-warning-text')}</div>
+                </div>
+              </div>
             )}
 
+            {/* Pillars — bold the numeric facts */}
             {confidenceBreakdown && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-xs">
                 {(['trend', 'momentum', 'volatility', 'structure'] as const).map(k => {
@@ -241,24 +268,16 @@ export default function SignalHero() {
                   const { Icon, label } = PILLAR_META[k];
                   return (
                     <div key={k} className="flex items-start gap-sm p-sm rounded-md bg-bg-sub-surface/60 border border-divider/60">
-                      <Icon size={11} className="text-fg-tertiary flex-shrink-0 mt-[2px]" />
+                      <Icon size={11} className={`${tone.accent} flex-shrink-0 mt-[2px]`} />
                       <div className="min-w-0">
-                        <div className="text-[9px] uppercase tracking-wider text-fg-tertiary">{label}</div>
-                        <div className="text-[11px] text-fg-primary/90 leading-snug">{text}</div>
+                        <div className="text-[9px] uppercase tracking-wider text-fg-tertiary font-bold">{label}</div>
+                        <div className="text-[12px] text-fg-primary/90 leading-snug">
+                          {emphasise(text, 'text-fg-primary')}
+                        </div>
                       </div>
                     </div>
                   );
                 })}
-              </div>
-            )}
-
-            {risk && (
-              <div className="flex items-start gap-xs p-sm rounded-md bg-warning-muted/50 border border-warning/30">
-                <AlertTriangle size={12} className="text-warning-text flex-shrink-0 mt-[2px]" />
-                <div className="min-w-0">
-                  <div className="text-[9px] uppercase tracking-wider text-warning-text/80">Invalidates if</div>
-                  <div className="text-[11px] text-warning-text leading-snug">{risk}</div>
-                </div>
               </div>
             )}
           </div>
